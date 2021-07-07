@@ -10,19 +10,20 @@
 #include <ui/ControlState.h>
 #include <ui/Constructer.h>
 
-#include <render/Renderer.h>
-#include <render/infos/RenderInfo.h>
-
 #include <misc/Option.h>
 #include <misc/Timer.h>
 #include <misc/Log.h>
 #include <misc/PathManager.h>
+
+#include <render/infos/proxy/UIInfos.h>
 
 #include <fstream>
 #include <format>
 #include <sstream>
 
 #include <SDL_mixer.h>
+
+#include "Renderer.h"
 
 ui::ControlState controlState;
 
@@ -44,12 +45,11 @@ void scroll_callback(GLFWwindow* w, double xoffset, double yoffset) {
 
 void prepareRender(
 	GLFWwindow* window,
-	render::RenderInfo& renderInfo,
+	RenderInfo& renderInfo,
 	PlayerInfo& playerInfo) {
 
 	auto& gameState = playerInfo.gameState;
 	auto& uiState = playerInfo.uiState;
-
 
 	int32_t frameSizeX, frameSizeY;
 	glfwGetFramebufferSize(window, &frameSizeX, &frameSizeY);
@@ -60,7 +60,8 @@ void prepareRender(
 	renderInfo.cameraInfo = { frameSizeX, frameSizeY, playerInfo.pos, glm::vec3(viewport, 200.0f) };
 
 	Global<misc::Timer>->newTiming("Prepare UI");
-	uiState.appendRenderInfo(gameState.tick, renderInfo);
+	render::UIInfos uiInfos{ renderInfo.uiRenderInfo, renderInfo.textRenderInfo };
+	uiState.appendRenderInfo(gameState.tick, uiInfos);
 	Global<misc::Timer>->endTiming("Prepare UI");
 }
 
@@ -82,7 +83,7 @@ void mainLoop(GLFWwindow* window, std::chrono::steady_clock::time_point startTim
 		uiState.UIs.push_back(ui::Global::pop());
 	}
 
-	render::Renderer renderer;
+	Renderer renderer;
 
 	PlayerInfo playerInfo{ { 35, 35, 0 },  gameState, controlState, uiState };
 
@@ -132,7 +133,7 @@ void mainLoop(GLFWwindow* window, std::chrono::steady_clock::time_point startTim
 
 		uiState.updateSize(window);
 
-		render::RenderInfo renderInfo;
+		RenderInfo renderInfo;
 		Global<misc::Timer>->newTiming("prep render");
 		prepareRender(window, renderInfo, playerInfo);
 		Global<misc::Timer>->endTiming("prep render");

@@ -4,6 +4,8 @@ add_executable(${PROJECT_NAME}
 	Setup.cpp
 	MainLoop.h
 	MainLoop.cpp
+	Renderer.h
+	Renderer.cpp
 )
 
 option(USE_PRECOMPILED_HEADERS "enable/disable precompiled headers" ON)
