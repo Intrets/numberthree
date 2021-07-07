@@ -1,0 +1,24 @@
+[submodule "cmake"]
+	path = cmake
+	url = https://github.com/intrets/cmake
+[submodule "render"]
+	path = render
+	url = https://github.com/intrets/render
+[submodule "ui"]
+	path = ui
+	url = https://github.com/intrets/ui
+[submodule "wrapped_glm"]
+	path = wrapped_glm
+	url = https://github.com/intrets/wrapped_glm
+[submodule "mem"]
+	path = mem
+	url = https://github.com/intrets/mem
+[submodule "misc"]
+	path = misc
+	url = https://github.com/intrets/misc
+[submodule "sound"]
+	path = sound
+	url = https://github.com/intrets/sound
+[submodule "tepp"]
+	path = tepp
+	url = https://github.com/intrets/tepp
