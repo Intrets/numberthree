@@ -1,10 +1,10 @@
 ﻿cmake_minimum_required(VERSION 3.20.3)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
 	message(FATAL_ERROR "Source dir same as build dir. Please don't use in-source builds. Remove or change CMakeCache.txt to change build dir.")
 endif()
-
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 project(numberthree LANGUAGES CXX)
 
@@ -63,7 +63,6 @@ find_package(GLEW REQUIRED)
 find_package(GLI REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(SDL_Mixer REQUIRED)
-
 
 # add_subdirectory(serial)
 add_subdirectory(ui)
