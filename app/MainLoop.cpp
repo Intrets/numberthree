@@ -5,6 +5,7 @@
 
 #include <game/ui/ConstructDebugUI.h>
 #include <game/GameState.h>
+#include <game/player/PlayerInfo.h>
 
 #include <ui/State.h>
 #include <ui/ControlState.h>
