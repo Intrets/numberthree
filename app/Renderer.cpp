@@ -22,6 +22,32 @@ void Renderer::render(GLFWwindow* window, RenderInfo const& renderInfo) {
 
 	glm::ivec4 viewport{ 0,0,renderInfo.cameraInfo.x, renderInfo.cameraInfo.y };
 
+	std::vector<glm::mat4> transforms;
+
+	constexpr int N = 5;
+	for (int32_t i = -N; i < N; i++) {
+		for (int32_t j = -N; j < N; j++) {
+			for (int32_t k = -N; k < N; k++) {
+				glm::vec3 pos{ i,j,k };
+				pos *= 0.3f;
+				transforms.push_back(
+					renderInfo.cameraInfo.P *
+					renderInfo.cameraInfo.rotation *
+					glm::translate(renderInfo.cameraInfo.camPos) *
+					glm::translate(-pos) *
+					glm::scale(glm::vec3(0.1f))
+				);
+			}
+		}
+	}
+
+	this->suzanneRenderer.render(
+		ogs::GeneralConfiguration(),
+		transforms,
+		target,
+		viewport
+	);
+
 	target.clearDepth();
 
 	this->uiBackgroundRenderer.render(

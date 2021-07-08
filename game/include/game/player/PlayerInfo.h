@@ -1,6 +1,8 @@
 #pragma once
 
 #include <wglm/glm.hpp>
+#include <wglm/gtc/matrix_transform.hpp>
+#include <wglm/gtx/euler_angles.hpp>
 
 namespace game
 {
@@ -15,9 +17,14 @@ namespace ui
 
 struct PlayerInfo
 {
-	glm::vec3 pos;
+	glm::vec3 pos = { 0, 0, 0 };
+	glm::vec3 look = { 0, 0, 0 };
 
 	game::GameState& gameState;
 	ui::ControlState& controlState;
 	ui::State& uiState;
+
+	PlayerInfo(game::GameState& gameState_, ui::ControlState& controlState_, ui::State& uiState_) :
+		gameState(gameState_), controlState(controlState_), uiState(uiState_) {
+	}
 };

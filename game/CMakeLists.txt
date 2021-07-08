@@ -10,6 +10,7 @@ make_module(
 		player/PlayerInfo
 		GameState
 		ui/ConstructDebugUI
+		renderer/GeneralRenderer
 	CXX_STANDARD 20
 	REQUIRED_LIBS
 		WGLM
@@ -18,3 +19,18 @@ make_module(
 		render
 		misc
 )
+set(SHADER_FILES
+	General
+)
+
+foreach(SHADER ${SHADER_FILES})
+	set(FULL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/shaders/${SHADER}")
+
+	file(READ "${FULL_PATH}.frag" FRAGMENT_SHADER)
+	file(WRITE "${FULL_PATH}.frag.inc" "static const char* ${SHADER}_frag = R\"(${FRAGMENT_SHADER})\";\n")
+
+	file(READ "${FULL_PATH}.vert" VERTEX_SHADER)
+	file(WRITE "${FULL_PATH}.vert.inc" "static const char* ${SHADER}_vert = R\"(${VERTEX_SHADER})\";\n")
+endforeach()
+
+target_include_directories(${MODULE_NAME} PRIVATE "./shaders")

@@ -165,7 +165,8 @@ bool initGLFW(GLFWwindow*& window, bool OPENGL_DEBUG) {
 
 	printf("OpenGL version supported by this platform (%s): \n", glGetString(GL_VERSION));
 
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	glfwSwapInterval(1);
 
