@@ -22,3 +22,6 @@
 [submodule "tepp"]
 	path = tepp
 	url = https://github.com/intrets/tepp
+[submodule "serial"]
+	path = serial
+	url = https://github.com/intrets/serial
