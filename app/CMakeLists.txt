@@ -30,4 +30,5 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 	SDL2::SDL2-static
 	SDL_Mixer
 	sound
+	PhysX
 )

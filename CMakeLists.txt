@@ -64,6 +64,8 @@ find_package(GLI REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(SDL_Mixer REQUIRED)
 
+find_package(PhysX)
+
 set(UI_FOUND OK)
 set(WGLM_FOUND OK)
 set(MEM_FOUND OK)

@@ -61,7 +61,7 @@ void prepareRender(
 	renderInfo.cameraInfo = {
 		.x = frameSizeX, .y = frameSizeY,
 		.camPos = playerInfo.pos,
-		.rotation = glm::yawPitchRoll(playerInfo.look.x, playerInfo.look.y, playerInfo.look.z),
+		.rotation = glm::yawPitchRoll(-playerInfo.look.x, -playerInfo.look.y, -playerInfo.look.z),
 		.P = glm::perspective(glm::radians(90.0f), ratio, 0.1f, 1000.0f),
 		.viewPort = glm::vec3(viewport, 200.0f) };
 

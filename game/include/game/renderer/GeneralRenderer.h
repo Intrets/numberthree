@@ -8,6 +8,8 @@
 #include "../shaders/General.vert.inc"
 #include "../shaders/General.frag.inc"
 
+#include <wglm/gtx/transform.hpp>
+
 namespace render
 {
 	struct GeneralRenderer
@@ -22,6 +24,8 @@ namespace render
 		bwo::ArrayBuffer<glm::vec3> normals;
 		bwo::ArrayBuffer<IndexType> indices;
 		int32_t indexSize;
+
+		int32_t size;
 
 		bwo::ArrayBuffer<glm::mat4> transforms{ bwo::BufferHint::STREAM_DRAW };
 
@@ -46,6 +50,9 @@ namespace render
 			> VAO;
 
 		bwo::UniformTexture2D texture_t{ "texture_t", program, 0 };
+		bwo::UniformMatrix4fv VP{ "VP", program };
+		bwo::Uniform3fv camPos{ "camPos", program };
+		bwo::Uniform1f time{ "time", program };
 
 		GeneralRenderer(
 			bwo::Model model_
@@ -61,6 +68,8 @@ namespace render
 		void render(
 			ogs::Configuration const& config,
 			std::vector<glm::mat4> const& transforms,
+			glm::mat4 VP,
+			glm::vec3 camPos,
 			bwo::FrameBuffer& target,
 			glm::ivec4 viewport
 		);

@@ -10,6 +10,9 @@
 
 #include <sstream>
 
+#include <PxPhysics.h>
+#include <PxFoundation.h>
+
 // TODO: keep runtime option, get value from config/command line argument
 bool OPENGL_DEBUG = true;
 
@@ -17,6 +20,14 @@ GLFWwindow* window;
 
 
 int main(int argc, char* argv[]) {
+	//static PxDefaultErrorCallback gDefaultErrorCallback;
+	//static PxDefaultAllocator gDefaultAllocatorCallback;
+
+	//mFoundation = PxCreateFoundation(PX_PHYSICS_VERSION, gDefaultAllocatorCallback,
+	//	gDefaultErrorCallback);
+	//if (!mFoundation)
+	//	fatalError("PxCreateFoundation failed!");
+
 	std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
 	std::filesystem::path resourcesPath;
 	if (argc > 1) {

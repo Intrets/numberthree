@@ -24,26 +24,40 @@ void Renderer::render(GLFWwindow* window, RenderInfo const& renderInfo) {
 
 	std::vector<glm::mat4> transforms;
 
-	constexpr int N = 5;
-	for (int32_t i = -N; i < N; i++) {
-		for (int32_t j = -N; j < N; j++) {
-			for (int32_t k = -N; k < N; k++) {
-				glm::vec3 pos{ i,j,k };
-				pos *= 0.3f;
-				transforms.push_back(
-					renderInfo.cameraInfo.P *
-					renderInfo.cameraInfo.rotation *
-					glm::translate(renderInfo.cameraInfo.camPos) *
-					glm::translate(-pos) *
-					glm::scale(glm::vec3(0.1f))
-				);
-			}
-		}
-	}
+	//constexpr int N = 10;
+	//constexpr int M = 10;
+	//constexpr int O = 1;
+	//for (int32_t i = -N; i < N; i++) {
+	//	for (int32_t j = -M; j < M; j++) {
+	//		for (int32_t k = -O; k < O; k++) {
+	//			glm::vec3 pos{ i,j,k };
+	//			pos *= 0.3f;
+	//			transforms.push_back(
+	//				glm::translate(pos) *
+	//				glm::scale(glm::vec3(0.05f))
+	//			);
+	//		}
+	//	}
+	//}
+
+	glm::mat4 VP = renderInfo.cameraInfo.P *
+		renderInfo.cameraInfo.rotation *
+		glm::translate(-renderInfo.cameraInfo.camPos);
 
 	this->suzanneRenderer.render(
 		ogs::GeneralConfiguration(),
 		transforms,
+		VP,
+		renderInfo.cameraInfo.camPos,
+		target,
+		viewport
+	);
+
+	this->ground.render(
+		ogs::GeneralConfiguration(),
+		transforms,
+		VP,
+		renderInfo.cameraInfo.camPos,
 		target,
 		viewport
 	);
