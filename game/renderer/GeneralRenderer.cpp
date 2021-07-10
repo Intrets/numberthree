@@ -1,6 +1,10 @@
 #include "renderer/GeneralRenderer.h"
 
+#include <render/loaders/TextureLoader.h>
+
 #include <mem/Global.h>
+
+#include <misc/PathManager.h>
 
 void render::GeneralRenderer::render(
 	ogs::Configuration const& config,
@@ -27,7 +31,11 @@ void render::GeneralRenderer::render(
 	this->VP.set(VP_);
 	this->camPos.set(glm::vec3(sin(test / 30.0f), cos(test / 41.0f), sin(test / 50.0f) * cos(test / 70.0f)) * 50.0f);
 	this->time.set(test * 3.0f);
-	//this->time.set(0.0f);
+
+
+	static bwo::Texture2D tex = load2DTexture(Global<misc::PathManager>->getTexturesPath() / "dev.dds");
+
+	this->texture_t.set(tex);
 
 	target.draw(
 		viewport,

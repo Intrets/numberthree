@@ -15,9 +15,10 @@ namespace ui
 	class ControlState;
 }
 
+inline static int test{};
 struct PlayerInfo
 {
-	glm::vec3 pos = { 0, 0, 0 };
+	glm::vec3 pos = { 0.0f, 0.0f, 10.0f };
 	glm::vec3 look = { 0, 0, 0 };
 
 	game::GameState& gameState;

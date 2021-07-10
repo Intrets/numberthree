@@ -136,6 +136,10 @@ void mainLoop(GLFWwindow* window, std::chrono::steady_clock::time_point startTim
 			file.close();
 		}
 
+
+		Global<misc::Timer>->endTiming("fps");
+		Global<misc::Timer>->newTiming("fps");
+
 		Global<misc::Timer>->newTiming("game logic");
 		gameState.runTick();
 		Global<misc::Timer>->endTiming("game logic");

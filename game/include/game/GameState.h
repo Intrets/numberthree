@@ -20,11 +20,11 @@ public:
 	MyAllocator() = default;
 	virtual ~MyAllocator() = default;
 	virtual void* allocate(size_t size, const char* typeName, const char* filename,
-		int line) {
+		int line) override {
 		return std::malloc(size);
 
 	};
-	virtual void deallocate(void* ptr) {
+	virtual void deallocate(void* ptr) override {
 		std::free(ptr);
 	};
 };
@@ -49,8 +49,10 @@ namespace game
 		physx::PxScene* scene;
 		physx::PxCpuDispatcher* cpuDispatcher;
 		physx::PxMaterial* material;
-		MyAllocator allocator{};
-		MyErrorCallback errorCallback{};
+		physx::PxDefaultAllocator allocator{};
+		physx::PxDefaultErrorCallback errorCallback{};
+		//MyAllocator allocator{};
+		//MyErrorCallback errorCallback{};
 
 		Everything everything;
 		int32_t tick = 0;
