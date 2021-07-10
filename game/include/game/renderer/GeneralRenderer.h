@@ -54,6 +54,7 @@ namespace render
 		bwo::Uniform3fv camPos{ "camPos", program };
 		bwo::Uniform1f time{ "time", program };
 
+		GeneralRenderer() = default;
 		GeneralRenderer(
 			bwo::Model model_
 		) :
@@ -64,6 +65,11 @@ namespace render
 			indexSize(model_.indexSize),
 			VAO(model, uv, normals, indices, transforms) {
 		}
+
+		DEFAULT_MOVE(GeneralRenderer);
+		NO_COPY(GeneralRenderer);
+
+		~GeneralRenderer() = default;
 
 		void render(
 			ogs::Configuration const& config,

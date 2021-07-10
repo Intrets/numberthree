@@ -24,8 +24,6 @@
 
 #include <SDL_mixer.h>
 
-#include "Renderer.h"
-
 ui::ControlState controlState;
 
 static void key_callback(GLFWwindow* w, int32_t key, int32_t scancode, int32_t action, int32_t mods) {
@@ -65,6 +63,10 @@ void prepareRender(
 		.P = glm::perspective(glm::radians(90.0f), ratio, 0.1f, 1000.0f),
 		.viewPort = glm::vec3(viewport, 200.0f) };
 
+	Global<misc::Timer>->newTiming("gamestate");
+	gameState.addRenderInfo(renderInfo);
+	Global<misc::Timer>->endTiming("gamestate");
+
 	Global<misc::Timer>->newTiming("Prepare UI");
 	render::UIInfos uiInfos{ renderInfo.uiRenderInfo, renderInfo.textRenderInfo };
 	uiState.appendRenderInfo(gameState.tick, uiInfos);
@@ -74,6 +76,7 @@ void prepareRender(
 void mainLoop(GLFWwindow* window, std::chrono::steady_clock::time_point startTime) {
 	ui::State uiState;
 	game::GameState gameState;
+	gameState.init();
 
 	{
 		ui::Global::push();

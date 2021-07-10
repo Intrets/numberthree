@@ -44,23 +44,34 @@ void Renderer::render(GLFWwindow* window, RenderInfo const& renderInfo) {
 		renderInfo.cameraInfo.rotation *
 		glm::translate(-renderInfo.cameraInfo.camPos);
 
-	this->suzanneRenderer.render(
-		ogs::GeneralConfiguration(),
-		transforms,
-		VP,
-		renderInfo.cameraInfo.camPos,
-		target,
-		viewport
-	);
+	for (size_t i = 0; i < static_cast<size_t>(ModelEnum::MAX); i++) {
+		this->modelRenderers[i].render(
+			ogs::GeneralConfiguration(),
+			renderInfo.modelRenderInfo[i],
+			VP,
+			renderInfo.cameraInfo.camPos,
+			target,
+			viewport
+		);
+	}
 
-	this->ground.render(
-		ogs::GeneralConfiguration(),
-		transforms,
-		VP,
-		renderInfo.cameraInfo.camPos,
-		target,
-		viewport
-	);
+	//this->suzanneRenderer.render(
+	//	ogs::GeneralConfiguration(),
+	//	transforms,
+	//	VP,
+	//	renderInfo.cameraInfo.camPos,
+	//	target,
+	//	viewport
+	//);
+
+	//this->ground.render(
+	//	ogs::GeneralConfiguration(),
+	//	transforms,
+	//	VP,
+	//	renderInfo.cameraInfo.camPos,
+	//	target,
+	//	viewport
+	//);
 
 	target.clearDepth();
 

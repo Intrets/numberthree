@@ -4,29 +4,183 @@
 #include <iostream>
 #include <filesystem>
 #include <chrono>
+#include <cassert>
+#include <sstream>
 
 #include "MainLoop.h"
 #include "Setup.h"
 
-#include <sstream>
+#include <misc/Log.h>
 
+#include <mem/Global.h>
+
+
+#include <PxPhysicsVersion.h>
 #include <PxPhysics.h>
 #include <PxFoundation.h>
+#include <PxScene.h>
+#include <PxMaterial.h>
+#include <geometry/PxSphereGeometry.h>
+#include <geometry/PxBoxGeometry.h>
+#include <geometry/PxPlaneGeometry.h>
+#include <PxRigidStatic.h>
+#include <common/PxTolerancesScale.h>
+#include <common/PxCoreUtilityTypes.h>
+#include <extensions/PxDefaultErrorCallback.h>
+#include <extensions/PxDefaultAllocator.h>
+#include <foundation/PxMathUtils.h>
+#include <extensions/PxDefaultCpuDispatcher.h>
+#include <extensions/PxDefaultSimulationFilterShader.h>
+
+
+//#include<common/>
 
 // TODO: keep runtime option, get value from config/command line argument
 bool OPENGL_DEBUG = true;
 
 GLFWwindow* window;
 
+class MyAllocator : public physx::PxDefaultAllocator
+{
+public:
+	MyAllocator() = default;
+	virtual ~MyAllocator() = default;
+	virtual void* allocate(size_t size, const char* typeName, const char* filename,
+		int line) {
+		return std::malloc(size);
+
+	};
+	virtual void deallocate(void* ptr) {
+		std::free(ptr);
+	};
+};
+
+class MyErrorCallback : public physx::PxErrorCallback
+{
+public:
+	MyErrorCallback() = default;
+	~MyErrorCallback() = default;
+
+	virtual void reportError(physx::PxErrorCode::Enum code, const char* message, const char* file, int line) {
+		Global<misc::Log>->putLine(std::format("PhysX error in file {}:{} -- {}\n", file, line, message));
+	};
+};
+
+static physx::PxFoundation* foundation;
+static physx::PxPhysics* physics;
+static physx::PxScene* scene;
+static physx::PxCpuDispatcher* cpuDispatcher;
+static MyAllocator allocator{};
+static MyErrorCallback errorCallback{};
+
+#define PX_CHECK_AND_RETURN_NULL(b, message) if (!b) std::terminate();
+
+//namespace physx
+//{
+//	PxRigidStatic* PxCreateStatic(PxPhysics& sdk,
+//		const PxTransform& transform,
+//		PxShape& shape) {
+//		PX_CHECK_AND_RETURN_NULL(transform.isValid(), "PxCreateStatic: transform is not valid.");
+//
+//		PxRigidStatic* s = sdk.createRigidStatic(transform);
+//		if (s)
+//			s->attachShape(shape);
+//		return s;
+//	}
+//
+//	PxRigidStatic* PxCreateStatic(PxPhysics& sdk,
+//		const PxTransform& transform,
+//		const PxGeometry& geometry,
+//		PxMaterial& material,
+//		const PxTransform& shapeOffset = PxTransform(PxIdentity)) {
+//
+//		PX_CHECK_AND_RETURN_NULL(transform.isValid(), "PxCreateStatic: transform is not valid.");
+//		PX_CHECK_AND_RETURN_NULL(shapeOffset.isValid(), "PxCreateStatic: shapeOffset is not valid.");
+//
+//		PxShape* shape = sdk.createShape(geometry, material, true);
+//		if (!shape)
+//			return NULL;
+//
+//		shape->setLocalPose(shapeOffset);
+//
+//		PxRigidStatic* s = PxCreateStatic(sdk, transform, *shape);
+//		shape->release();
+//		return s;
+//	}
+//
+//
+//
+//
+//	PxRigidStatic* PxCreatePlane(PxPhysics& sdk,
+//		const PxPlane& plane,
+//		PxMaterial& material) {
+//		PX_CHECK_AND_RETURN_NULL(plane.n.isFinite(), "PxCreatePlane: plane normal is not valid.");
+//
+//		if (!plane.n.isNormalized())
+//			return NULL;
+//
+//		return PxCreateStatic(sdk, PxTransformFromPlaneEquation(plane), PxPlaneGeometry(), material);
+//	}
+//}
+
 
 int main(int argc, char* argv[]) {
-	//static PxDefaultErrorCallback gDefaultErrorCallback;
-	//static PxDefaultAllocator gDefaultAllocatorCallback;
 
-	//mFoundation = PxCreateFoundation(PX_PHYSICS_VERSION, gDefaultAllocatorCallback,
-	//	gDefaultErrorCallback);
-	//if (!mFoundation)
-	//	fatalError("PxCreateFoundation failed!");
+	//foundation = PxCreateFoundation(PX_PHYSICS_VERSION, allocator,
+	//	errorCallback);
+	//if (!foundation) {
+	//	assert(0);
+	//	std::terminate();
+	//}
+
+	//bool recordMemoryAllocations = true;
+
+	//physics = PxCreatePhysics(PX_PHYSICS_VERSION, *foundation,
+	//	physx::PxTolerancesScale(), recordMemoryAllocations);
+	//if (!physics) {
+	//	assert(0);
+	//	std::terminate();
+	//}
+
+	//physx::PxSceneDesc pxSceneDesc(physics->getTolerancesScale());
+	//pxSceneDesc.gravity = physx::PxVec3(0.0f, -90.81f, 0.0f);
+
+	//if (!pxSceneDesc.cpuDispatcher) {
+	//	cpuDispatcher = physx::PxDefaultCpuDispatcherCreate(1);
+	//	if (!cpuDispatcher) {
+	//		std::cout << "PxCpuDispatcher creation failed!\n";
+	//		return EXIT_FAILURE;
+	//	}
+
+	//	pxSceneDesc.cpuDispatcher = cpuDispatcher;
+	//}
+
+	//if (!pxSceneDesc.filterShader) {
+	//	pxSceneDesc.filterShader = physx::PxDefaultSimulationFilterShader;
+	//}
+
+	//scene = physics->createScene(pxSceneDesc);
+	//if (!scene) {
+	//	std::terminate();
+	//}
+
+
+	//[[maybe_unused]]
+	//auto myMaterial = physics->createMaterial(0.5f, 0.5f, 0.5f);
+	//std::cout << "refcount: " << myMaterial->getReferenceCount() << "\n";
+	////myMaterial->release();
+	//assert(myMaterial);
+
+
+	//[[maybe_unused]]
+	//physx::PxRigidStatic* floor = physx::PxCreatePlane(
+	//	*physics,
+	//	physx::PxPlane(physx::PxVec3(0, 1, 0), 0),
+	//	*myMaterial
+	//);
+
+	//sizeof(physx::PxVec3);
+
 
 	std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
 	std::filesystem::path resourcesPath;

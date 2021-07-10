@@ -11,6 +11,8 @@ make_module(
 		GameState
 		ui/ConstructDebugUI
 		renderer/GeneralRenderer
+		Renderer
+		Game
 	CXX_STANDARD 20
 	REQUIRED_LIBS
 		WGLM
@@ -18,6 +20,7 @@ make_module(
 		ui
 		render
 		misc
+		PhysX
 )
 set(SHADER_FILES
 	General

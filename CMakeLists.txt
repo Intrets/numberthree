@@ -28,7 +28,7 @@ elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
 	# clang-cl
 	if(${CMAKE_CXX_SIMULATE_ID} STREQUAL MSVC)
 		message(STATUS "Compiler: Clang-cl")
-		add_compile_options(-W4 -Werror -std:c++20)
+		add_compile_options(-W4 -std:c++20)
 
 		# disabled warnings
 		add_compile_options(-Wno-sign-compare)
@@ -73,8 +73,9 @@ set(MISC_FOUND OK)
 set(GAME_FOUND OK)
 set(TEPP_FOUND OK)
 set(SOUND_FOUND OK)
+set(SERIAL_FOUND OK)
 
-# add_subdirectory(serial)
+add_subdirectory(serial)
 add_subdirectory(ui)
 add_subdirectory(mem)
 add_subdirectory(misc)

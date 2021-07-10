@@ -10,6 +10,10 @@ void render::GeneralRenderer::render(
 	bwo::FrameBuffer& target,
 	glm::ivec4 viewport) {
 
+	if (transforms_.empty()) {
+		return;
+	}
+
 	static float test = 0.0f;
 
 	test += 0.2f;
@@ -19,7 +23,7 @@ void render::GeneralRenderer::render(
 	this->VAO.bind();
 	this->program.use();
 
-	//this->transforms.set(transforms_);
+	this->transforms.set(transforms_);
 	this->VP.set(VP_);
 	this->camPos.set(glm::vec3(sin(test / 30.0f), cos(test / 41.0f), sin(test / 50.0f) * cos(test / 70.0f)) * 50.0f);
 	this->time.set(test * 3.0f);
@@ -33,7 +37,7 @@ void render::GeneralRenderer::render(
 				this->indexSize,
 				this->GLIndexType,
 				(void*)0,
-				this->size
+				static_cast<GLsizei>(transforms_.size())
 			);
 		}
 	);

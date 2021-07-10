@@ -10,9 +10,12 @@
 #include <render/loaders/ModelLoader.h>
 
 #include <game/renderer/GeneralRenderer.h>
+#include <game/Game.h>
 
 #include <misc/PathManager.h>
 #include <mem/Global.h>
+
+#include <render/BufferWrappers.h>
 
 struct RenderInfo
 {
@@ -22,6 +25,12 @@ struct RenderInfo
 	render::UIRenderInfo uiRenderInfo;
 	render::BlitArrayRenderInfo tileRenderInfo;
 	render::HighlightRenderInfo highlightRenderInfo;
+
+	std::array<std::vector<glm::mat4>, static_cast<size_t>(ModelEnum::MAX)> modelRenderInfo;
+
+	void addModel(ModelEnum e, glm::mat4 const& transform) {
+		this->modelRenderInfo[static_cast<size_t>(e)].push_back(transform);
+	};
 };
 
 struct Renderer
@@ -32,62 +41,25 @@ public:
 	render::DebugRenderer debugRenderer{};
 	render::HighlightRenderer highlightRenderer{};
 
+	std::vector<render::GeneralRenderer> modelRenderers{};
+
 	std::filesystem::path suzannePath = Global<misc::PathManager>->getModelsPath() / "Suzanne.obj";
 	std::filesystem::path groundPath = Global<misc::PathManager>->getModelsPath() / "Cube.obj";
+
 	render::GeneralRenderer suzanneRenderer;
 	render::GeneralRenderer ground;
 
 	Renderer() :
 		suzanneRenderer(render::loadModel(suzannePath.string())),
 		ground(render::loadModel(groundPath.string())) {
-
 			{
-				std::vector<glm::mat4> transforms_;
+				for (size_t i = 0; i < static_cast<size_t>(ModelEnum::MAX); i++) {
+					auto modelName = modelNames[i];
+					std::filesystem::path path = Global<misc::PathManager>->getModelsPath() / modelName;
+					render::GeneralRenderer ren{ render::loadModel(path.string()) };
 
-				//constexpr int N = 20;
-				//constexpr int M = 20;
-				//constexpr int O = 1;
-				//for (int32_t i = -N; i < N; i++) {
-				//	for (int32_t j = -M; j < M; j++) {
-				//		for (int32_t k = -O; k < O; k++) {
-				//			glm::vec3 pos{ i,j,k };
-				//			pos *= 0.3f;
-				//			transforms_.push_back(
-				//				glm::translate(pos) *
-				//				glm::scale(glm::vec3(0.5f))
-				//			);
-				//		}
-				//	}
-				//}
-
-				for (size_t i = 0; i < 50; i++) {
-					auto get = [] { return rand() % 200; };
-					glm::vec3 pos{ get(), get(), get() };
-					transforms_.push_back(
-						glm::translate(pos) *
-						glm::scale(glm::vec3(5.0f))
-					);
+					this->modelRenderers.push_back(std::move(ren));
 				}
-
-				this->suzanneRenderer.size = static_cast<int32_t>(transforms_.size());
-
-				this->suzanneRenderer.transforms.set(transforms_);
-			}
-
-			{
-				std::vector<glm::mat4> transforms_;
-
-				transforms_.push_back(
-					glm::mat4()
-				);
-
-				transforms_.push_back(
-					glm::translate(glm::vec3(0, 0, 0)) *
-					glm::scale(glm::vec3(10000.0f, 10000.0f, 1.0f))
-				);
-
-				this->ground.size = static_cast<int32_t>(transforms_.size());
-				this->ground.transforms.set(transforms_);
 			}
 
 	};
