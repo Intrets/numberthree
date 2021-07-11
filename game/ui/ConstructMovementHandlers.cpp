@@ -45,69 +45,28 @@ namespace game
 				}
 			};
 
-			movement.get()->addGlobalBind({ CONTROL::KEY::LEFT, CONTROL::STATE::PRESSED | CONTROL::STATE::DOWN }, [&](UIInfo& uiInfo, UserData& userData) -> CallBackBindResult
-				{
-					if (userData.player.isQualified()) {
-						glm::vec4 dir4{ -1.0f, 0.0f, 0.0f, 1.0f };
-						auto M = glm::yawPitchRoll(-userData.look.x, -userData.look.y, -userData.look.z);
-						glm::vec3 dir3 = dir4 * M;
-						dir3.z = 0.0f;
+			for (auto& [key, dir4] : {
+				std::tuple{CONTROL::KEY::RIGHT, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f) },
+				std::tuple{CONTROL::KEY::LEFT, glm::vec4(-1.0f, 0.0f, 0.0f, 1.0f) },
+				std::tuple{CONTROL::KEY::DOWN, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f) },
+				std::tuple{CONTROL::KEY::UP, glm::vec4(0.0f, 0.0f, -1.0f, 1.0f) }
+				}) {
 
-						auto body = userData.player->get<game::Physics>().getAs<physx::PxRigidDynamic>();
-						const auto v = convert<glm::vec3>(body->getLinearVelocity());
+				movement.get()->addGlobalBind({ key, CONTROL::STATE::PRESSED | CONTROL::STATE::DOWN }, [=](UIInfo& uiInfo, UserData& userData) -> CallBackBindResult
+					{
+						if (userData.player.isQualified()) {
+							auto M = glm::yawPitchRoll(-userData.look.x, -userData.look.y, -userData.look.z);
+							glm::vec3 dir3 = dir4 * M;
+							dir3.z = 0.0f;
 
-						userData.player->get<game::Physics>().applyAcceleration(calculateForce(dir3, v));
-					}
-					return BIND::RESULT::CONTINUE;
-				});
+							auto body = userData.player->get<game::Physics>().getAs<physx::PxRigidDynamic>();
+							const auto v = convert<glm::vec3>(body->getLinearVelocity());
 
-			movement.get()->addGlobalBind({ CONTROL::KEY::RIGHT, CONTROL::STATE::PRESSED | CONTROL::STATE::DOWN }, [&](UIInfo& uiInfo, UserData& userData) -> CallBackBindResult
-				{
-					if (userData.player.isQualified()) {
-						glm::vec4 dir4{ 1.0f, 0.0f, 0.0f, 1.0f };
-						auto M = glm::yawPitchRoll(-userData.look.x, -userData.look.y, -userData.look.z);
-						glm::vec3 dir3 = dir4 * M;
-						dir3.z = 0.0f;
-
-						auto body = userData.player->get<game::Physics>().getAs<physx::PxRigidDynamic>();
-						const auto v = convert<glm::vec3>(body->getLinearVelocity());
-
-						userData.player->get<game::Physics>().applyAcceleration(calculateForce(dir3, v));
-					}
-					return BIND::RESULT::CONTINUE;
-				});
-
-			movement.get()->addGlobalBind({ CONTROL::KEY::DOWN, CONTROL::STATE::PRESSED | CONTROL::STATE::DOWN }, [&](UIInfo& uiInfo, UserData& userData) -> CallBackBindResult
-				{
-					if (userData.player.isQualified()) {
-						glm::vec4 dir4{ 0.0f, 0.0f, 1.0f, 1.0f };
-						auto M = glm::yawPitchRoll(-userData.look.x, -userData.look.y, -userData.look.z);
-						glm::vec3 dir3 = dir4 * M;
-						dir3.z = 0.0f;
-
-						auto body = userData.player->get<game::Physics>().getAs<physx::PxRigidDynamic>();
-						const auto v = convert<glm::vec3>(body->getLinearVelocity());
-
-						userData.player->get<game::Physics>().applyAcceleration(calculateForce(dir3, v));
-					}
-					return BIND::RESULT::CONTINUE;
-				});
-
-			movement.get()->addGlobalBind({ CONTROL::KEY::UP, CONTROL::STATE::PRESSED | CONTROL::STATE::DOWN }, [&](UIInfo& uiInfo, UserData& userData) -> CallBackBindResult
-				{
-					if (userData.player.isQualified()) {
-						glm::vec4 dir4{ 0.0f, 0.0f, -1.0f, 1.0f };
-						auto M = glm::yawPitchRoll(-userData.look.x, -userData.look.y, -userData.look.z);
-						glm::vec3 dir3 = dir4 * M;
-						dir3.z = 0.0f;
-
-						auto body = userData.player->get<game::Physics>().getAs<physx::PxRigidDynamic>();
-						const auto v = convert<glm::vec3>(body->getLinearVelocity());
-
-						userData.player->get<game::Physics>().applyAcceleration(calculateForce(dir3, v));
-					}
-					return BIND::RESULT::CONTINUE;
-				});
+							userData.player->get<game::Physics>().applyAcceleration(calculateForce(dir3, v));
+						}
+						return BIND::RESULT::CONTINUE;
+					});
+			}
 
 			movement.get()->addGlobalBind({ CONTROL::KEY::JUMP, CONTROL::STATE::PRESSED | CONTROL::STATE::DOWN }, [&](UIInfo& uiInfo, UserData& userData) -> CallBackBindResult
 				{
