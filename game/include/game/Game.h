@@ -5,10 +5,26 @@
 
 #include <serial/Serializer.h>
 
+#include <mem/Everything.h>
+
 #include <wglm/gtx/quaternion.hpp>
 #include <wglm/gtx/transform.hpp>
 
 #include <PxPhysicsAPI.h>
+
+namespace game
+{
+	struct GameState;
+}
+
+struct UserData
+{
+	glm::vec3 look = { 0, 0, 0 };
+
+	QualifiedObject player;
+
+	game::GameState& gameState;
+};
 
 enum class ModelEnum
 {

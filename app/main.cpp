@@ -123,7 +123,6 @@ static MyErrorCallback errorCallback{};
 //	}
 //}
 
-
 int main(int argc, char* argv[]) {
 
 	//foundation = PxCreateFoundation(PX_PHYSICS_VERSION, allocator,

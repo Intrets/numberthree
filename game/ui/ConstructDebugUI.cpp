@@ -55,9 +55,9 @@ namespace game
 		ui::constrainWidth({ ui::SIZETYPE::RELATIVE_WIDTH, 0.5f });
 		auto saveButton = ui::textButton("save");
 
-		saveButton.get()->setOnPress([saveName = saveName.get()](PlayerInfo& playerInfo) {
+		saveButton.get()->setOnPress([saveName = saveName.get()](ui::UIInfo& uiInfo, UserData& userData) {
 			auto const name = misc::trim(saveName->text.getLines()[0]);
-			playerInfo.uiState.saveGame = name;
+			uiInfo.uiState.saveGame = name;
 
 			return ui::BIND::RESULT::CONTINUE;
 		}
@@ -65,9 +65,9 @@ namespace game
 
 		auto loadButton = ui::textButton("load");
 
-		loadButton.get()->setOnPress([saveName = saveName.get()](PlayerInfo& playerInfo) {
+		loadButton.get()->setOnPress([saveName = saveName.get()](ui::UIInfo& uiInfo, UserData& userData) {
 			auto const name = misc::trim(saveName->text.getLines()[0]);
-			playerInfo.uiState.loadGame = name;
+			uiInfo.uiState.loadGame = name;
 
 			return ui::BIND::RESULT::CONTINUE;
 		}
@@ -154,13 +154,13 @@ namespace game
 
 		tickInfo.get()->addGlobalBind(
 			{ ui::CONTROL::KEY::EVERY_TICK, static_cast<int32_t>(ui::CONTROL::STATE::PRESSED) },
-			[tickInfo = tickInfo.get()](PlayerInfo& playerInfo_) -> ui::CallBackBindResult
+			[tickInfo = tickInfo.get()](ui::UIInfo& uiInfo, UserData& userData_) -> ui::CallBackBindResult
 			{
 				tickInfo->setText(Global<misc::Timer>->print());
 				return ui::BIND::RESULT::CONTINUE;
 			});
 
-		debugButton.get()->setOnRelease([debugButton = debugButton.get()](PlayerInfo& playerInfo_) -> ui::CallBackBindResult
+		debugButton.get()->setOnRelease([debugButton = debugButton.get()](ui::UIInfo& uiInfo, UserData& userData_) -> ui::CallBackBindResult
 			{
 				misc::Option<misc::OPTION::GR_DEBUG, bool>::setVal(!misc::Option<misc::OPTION::GR_DEBUG, bool>::getVal());
 				debugButton->setColor(misc::Option<misc::OPTION::GR_DEBUG, bool>::getVal() ? COLORS::UI::GREEN : COLORS::UI::RED);
@@ -168,7 +168,7 @@ namespace game
 			});
 		debugButton.get()->setColor(misc::Option<misc::OPTION::GR_DEBUG, bool>::getVal() ? COLORS::UI::GREEN : COLORS::UI::RED);
 
-		renderThread.get()->setOnRelease([renderThread = renderThread.get()](PlayerInfo& playerInfo_) -> ui::CallBackBindResult
+		renderThread.get()->setOnRelease([renderThread = renderThread.get()](ui::UIInfo& uiInfo, UserData& userData_) -> ui::CallBackBindResult
 			{
 				misc::Option<misc::OPTION::GR_RENDERTHREAD, bool>::setVal(!misc::Option<misc::OPTION::GR_RENDERTHREAD, bool>::getVal());
 				renderThread->setColor(misc::Option<misc::OPTION::GR_RENDERTHREAD, bool>::getVal() ? COLORS::UI::GREEN : COLORS::UI::RED);
@@ -176,7 +176,7 @@ namespace game
 			});
 		renderThread.get()->setColor(misc::Option<misc::OPTION::GR_RENDERTHREAD, bool>::getVal() ? COLORS::UI::GREEN : COLORS::UI::RED);
 
-		logOutput.get()->addGlobalBind({ ui::CONTROL::KEY::EVERY_TICK, static_cast<int32_t>(ui::CONTROL::STATE::PRESSED) }, [logOutput = logOutput.get()](PlayerInfo& playerInfo_) -> ui::CallBackBindResult
+		logOutput.get()->addGlobalBind({ ui::CONTROL::KEY::EVERY_TICK, static_cast<int32_t>(ui::CONTROL::STATE::PRESSED) }, [logOutput = logOutput.get()](ui::UIInfo& uiInfo, UserData& userData_) -> ui::CallBackBindResult
 			{
 				auto& vec = logOutput->text.getLinesMutable();
 				if (vec.size() > 100) {

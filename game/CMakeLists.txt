@@ -10,6 +10,7 @@ make_module(
 		player/PlayerInfo
 		GameState
 		ui/ConstructDebugUI
+		ui/ConstructMovementHandlers
 		renderer/GeneralRenderer
 		Renderer
 		Game

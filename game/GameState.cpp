@@ -43,7 +43,7 @@ physx::PxFilterFlags SampleSubmarineFilterShader(
 	pairFlags = physx::PxPairFlag::eCONTACT_DEFAULT;
 
 	if (filterData0.word0 & FilterGroup::PLAYER) {
-		pairFlags |= physx::PxPairFlag::eNOTIFY_TOUCH_FOUND;
+		pairFlags |= physx::PxPairFlag::eNOTIFY_TOUCH_FOUND | PxPairFlag::ePRE_SOLVER_VELOCITY;
 	}
 
 	return physx::PxFilterFlag::eDEFAULT;
@@ -76,8 +76,8 @@ void game::GameState::runTick() {
 		};
 
 		const auto t = static_cast<physx::PxRigidDynamic*>(changes[i])->getGlobalPose();
-		obj.get<Transform>().quat = { t.q.x, t.q.y, t.q.z , t.q.w };
-		obj.get<Transform>().pos = { t.p.x, t.p.y, t.p.z };
+		obj.get<Transform>().quat = convert<glm::quat>(t.q);
+		obj.get<Transform>().pos = convert<glm::vec3>(t.p);
 	}
 	Global<misc::Timer>->endTiming("px update");
 
@@ -144,8 +144,8 @@ void game::GameState::init() {
 		assert(0);
 		std::terminate();
 	}
-	this->material = physics->createMaterial(0.0f, 0.0f, 0.5f);
-	this->playerMaterial = physics->createMaterial(0.0f, 0.0f, 0.0f);
+	this->material = physics->createMaterial(0.0f, 0.7f, 0.3f);
+	this->playerMaterial = physics->createMaterial(0.0f, 0.0f, -1.0f);
 
 	// player object
 	{
@@ -154,12 +154,11 @@ void game::GameState::init() {
 		this->player = obj;
 
 		obj.add<Transform>();
-		obj.add<Model>(ModelEnum::CUBE);
 		obj.add<Player>();
 
 		physx::PxRigidDynamic* box = physx::PxCreateDynamic(
 			*this->physics,
-			physx::PxTransform(physx::PxVec3(0.0f, 0.0f, 3.0f)),
+			physx::PxTransform(physx::PxVec3(30.0f, 0.0f, 3.0f)),
 			physx::PxBoxGeometry(physx::PxVec3(1.0f, 1.0f, 3.0f)),
 			*this->playerMaterial,
 			1.0f
@@ -180,16 +179,38 @@ void game::GameState::init() {
 		this->scene->addActor(*box);
 	}
 
+	// big box
 	{
 		auto obj = this->everything.make();
 
 		obj.add<Model>(ModelEnum::CUBE);
-		obj.add<Transform>();
+		obj.add<Transform>().scale = glm::vec3(30.0f, 30.0f, 1.0f);
 
 		physx::PxRigidDynamic* box = physx::PxCreateDynamic(
 			*this->physics,
-			physx::PxTransform(physx::PxVec3(0.0f, 1.0f, 1.1f)),
-			physx::PxBoxGeometry(physx::PxVec3(1.0f, 1.0f, 1.0f)),
+			physx::PxTransform(physx::PxVec3(0.0f, 20.0f, 100.1f)),
+			physx::PxBoxGeometry(physx::PxVec3(30.0f, 30.0f, 1.0f)),
+			*this->material,
+			1.0f
+		);
+
+		box->userData = std::bit_cast<void*>(obj.index);
+
+		SetupDefaultRigidDynamic(*box);
+		this->scene->addActor(*box);
+	}
+
+	// small box under big box
+	{
+		auto obj = this->everything.make();
+
+		obj.add<Model>(ModelEnum::CUBE);
+		obj.add<Transform>().scale = glm::vec3(1.0f, 1.0f, 1.0f);
+
+		physx::PxRigidDynamic* box = physx::PxCreateDynamic(
+			*this->physics,
+			physx::PxTransform(physx::PxVec3(5.0f, 25.0f, 1.1f)),
+			physx::PxBoxGeometry(physx::PxVec3(1.0f, 1.0f, 3.0f)),
 			*this->material,
 			1.0f
 		);
@@ -202,7 +223,7 @@ void game::GameState::init() {
 
 	constexpr auto get = [] { return static_cast<float>(rand() % 100 - 50); };
 
-	for (size_t i = 0; i < 10; i++) {
+	for (size_t i = 0; i < 0; i++) {
 		auto obj = this->everything.make();
 
 		obj.add<Model>(ModelEnum::CUBE);
@@ -250,22 +271,53 @@ void game::GameState::init() {
 		auto obj = this->everything.make();
 
 		obj.add<Model>(ModelEnum::PLANE);
+
+		auto plane = physx::PxCreatePlane(
+			*this->physics,
+			physx::PxPlane(physx::PxVec3(0, 0, 1).getNormalized(), 0),
+			*material
+		);
+
+		auto p = convert<glm::vec3>(plane->getGlobalPose().p);
+		auto q = convert<glm::quat>(plane->getGlobalPose().q);
+
 		obj.add<Transform>(
 			Transform{
-				.pos = glm::vec3(0.0f, 0.0f, 0.0f),
-				.quat = glm::quat(),
+				.pos = p,
+				.quat = q,
 				.scale = glm::vec3(100.0f)
 			}
 		);
 
+		this->scene->addActor(*plane);
+	}
+
+	// angled plane
+	{
+		auto obj = this->everything.make();
+
+		obj.add<Model>(ModelEnum::PLANE);
+
 		auto plane = physx::PxCreatePlane(
 			*this->physics,
-			physx::PxPlane(physx::PxVec3(0, 0, 1).getNormalized(), 0)
-			,
+			physx::PxPlane(physx::PxVec3(0, 0.4f, 1).getNormalized(), 0),
 			*material
 		);
 
-		//obj.add<Physics>(plane);
+		PxShape* planeShape;
+		plane->getShapes(&planeShape, 1, 0);
+
+		auto p = convert<glm::vec3>(plane->getGlobalPose().p);
+		auto q = convert<glm::quat>(plane->getGlobalPose().q);
+
+		obj.add<Transform>(
+			Transform{
+				.pos = p,
+				.quat = q,
+				.scale = glm::vec3(100.0f)
+			}
+		);
+
 
 		this->scene->addActor(*plane);
 	}

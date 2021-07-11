@@ -7,10 +7,14 @@
 #include <game/GameState.h>
 #include <game/player/PlayerInfo.h>
 #include <game/Game.h>
+#include <game/ui/ConstructMovementHandlers.h>
 
 #include <ui/State.h>
 #include <ui/ControlState.h>
 #include <ui/Constructer.h>
+#include <ui/SizeType.h>
+#include <ui/TextDisplay.h>
+#include <ui/ControlState.h>
 
 #include <misc/Option.h>
 #include <misc/Timer.h>
@@ -46,14 +50,15 @@ void scroll_callback(GLFWwindow* w, double xoffset, double yoffset) {
 void prepareRender(
 	GLFWwindow* window,
 	RenderInfo& renderInfo,
-	PlayerInfo& playerInfo) {
+	ui::UIInfo& uiInfo,
+	UserData& userData) {
 
-	auto& gameState = playerInfo.gameState;
-	auto& uiState = playerInfo.uiState;
+	auto& gameState = userData.gameState;
+	auto& uiState = uiInfo.uiState;
 
 	glm::vec3 p{};
-	if (playerInfo.player.isQualified()) {
-		p = playerInfo.player->get<game::Transform>().pos;
+	if (userData.player.isQualified()) {
+		p = userData.player->get<game::Transform>().pos;
 	}
 
 	int32_t frameSizeX, frameSizeY;
@@ -66,7 +71,7 @@ void prepareRender(
 	renderInfo.cameraInfo = {
 		.x = frameSizeX, .y = frameSizeY,
 		.camPos = p + glm::vec3(0.0f, 0.0f, 1.8f),
-		.rotation = glm::yawPitchRoll(-playerInfo.look.x, -playerInfo.look.y, -playerInfo.look.z),
+		.rotation = glm::yawPitchRoll(-userData.look.x, -userData.look.y, -userData.look.z),
 		.P = glm::perspective(glm::radians(90.0f), ratio, 0.1f, 1000.0f),
 		.viewPort = glm::vec3(viewport, 200.0f) };
 
@@ -99,9 +104,46 @@ void mainLoop(GLFWwindow* window, std::chrono::steady_clock::time_point startTim
 		uiState.UIs.push_back(ui::Global::pop());
 	}
 
+	uiState.addUI(game::constructMovementHandlers());
+
+	//speedometer
+	{
+		ui::Global::push();
+
+		ui::align(ui::ALIGNMENT::CENTER);
+		auto text = ui::textDisplaySingle("alo");
+
+		text.get()->addGlobalBind(
+			{ ui::CONTROL::KEY::EVERY_TICK },
+			[text = text.get()](ui::UIInfo& uiInfo, UserData& userData) {
+			if (userData.player.isQualified()) {
+				auto actor = userData.player->get<game::Physics>().getAs<physx::PxRigidDynamic>();
+				auto vel = convert<glm::vec3>(actor->getLinearVelocity());
+
+				auto speed = glm::length(glm::vec2(vel));
+				if (speed < 0.001f) {
+					speed = 0.0f;
+				}
+				text->setText(std::format("{}", speed));
+			}
+			return ui::BIND::RESULT::CONTINUE;
+		}
+		);
+
+		uiState.addUI(ui::Global::pop());
+	}
+
 	Renderer renderer;
 
-	PlayerInfo playerInfo{ gameState, controlState, uiState, gameState.player.getObject() };
+	ui::UIInfo uiInfo{
+		.controlState = controlState,
+		.uiState = uiState
+	};
+
+	UserData userData{
+		.player = gameState.player.getObject(),
+		.gameState = gameState
+	};
 
 	glfwSetCharCallback(window, char_callback);
 	glfwSetKeyCallback(window, key_callback);
@@ -155,7 +197,7 @@ void mainLoop(GLFWwindow* window, std::chrono::steady_clock::time_point startTim
 
 		RenderInfo renderInfo;
 		Global<misc::Timer>->newTiming("prep render");
-		prepareRender(window, renderInfo, playerInfo);
+		prepareRender(window, renderInfo, uiInfo, userData);
 		Global<misc::Timer>->endTiming("prep render");
 
 		controlState.cycleStates();
@@ -163,7 +205,7 @@ void mainLoop(GLFWwindow* window, std::chrono::steady_clock::time_point startTim
 
 		uiState.updateCursor(window, { glm::vec2() });
 
-		uiState.run(playerInfo);
+		uiState.run(uiInfo, userData);
 
 		if (glfwWindowShouldClose(window)) {
 			break;
