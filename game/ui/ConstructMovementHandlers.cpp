@@ -25,6 +25,7 @@ namespace game
 			movement.get()->addGlobalBind({ CONTROL::KEY::MOUSE_POS_CHANGED, CONTROL::STATE::PRESSED }, [&](UIInfo& uiInfo, UserData& userData) -> CallBackBindResult
 				{
 					auto d = glm::vec2(uiInfo.uiState.getCursorMovement()) / 500.0f;
+					userData.look += glm::vec3(0.0f, d.y, -d.x);
 					userData.look.y = glm::clamp(userData.look.y, 0.1f, glm::pi<float>() - 0.1f);
 					return BIND::RESULT::CONTINUE;
 				});

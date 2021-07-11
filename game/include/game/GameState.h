@@ -83,6 +83,8 @@ namespace game
 
 		FilterCallbackHandler handler{};
 
+		void shootProjectile(glm::vec3 dir, float speed);
+
 		QualifiedObject player;
 
 		Everything everything;
