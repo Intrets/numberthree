@@ -25,7 +25,6 @@ namespace game
 			movement.get()->addGlobalBind({ CONTROL::KEY::MOUSE_POS_CHANGED, CONTROL::STATE::PRESSED }, [&](UIInfo& uiInfo, UserData& userData) -> CallBackBindResult
 				{
 					auto d = glm::vec2(uiInfo.uiState.getCursorMovement()) / 500.0f;
-					userData.look += glm::vec3(0.0f, d.y, -d.x);
 					userData.look.y = glm::clamp(userData.look.y, 0.1f, glm::pi<float>() - 0.1f);
 					return BIND::RESULT::CONTINUE;
 				});
@@ -45,24 +44,23 @@ namespace game
 				}
 			};
 
-			for (auto& [key, dir4] : {
-				std::tuple{CONTROL::KEY::RIGHT, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f) },
-				std::tuple{CONTROL::KEY::LEFT, glm::vec4(-1.0f, 0.0f, 0.0f, 1.0f) },
-				std::tuple{CONTROL::KEY::DOWN, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f) },
-				std::tuple{CONTROL::KEY::UP, glm::vec4(0.0f, 0.0f, -1.0f, 1.0f) }
+			for (const auto [key, dir3] : {
+				std::tuple{ CONTROL::KEY::RIGHT, glm::vec3(1.0f, 0.0f, 0.0f) },
+				std::tuple{ CONTROL::KEY::LEFT, glm::vec3(-1.0f, 0.0f, 0.0f) },
+				std::tuple{ CONTROL::KEY::DOWN, glm::vec3(0.0f, 0.0f, 1.0f) },
+				std::tuple{ CONTROL::KEY::UP, glm::vec3(0.0f, 0.0f, -1.0f) }
 				}) {
 
 				movement.get()->addGlobalBind({ key, CONTROL::STATE::PRESSED | CONTROL::STATE::DOWN }, [=](UIInfo& uiInfo, UserData& userData) -> CallBackBindResult
 					{
 						if (userData.player.isQualified()) {
-							auto M = glm::yawPitchRoll(-userData.look.x, -userData.look.y, -userData.look.z);
-							glm::vec3 dir3 = dir4 * M;
-							dir3.z = 0.0f;
+							glm::vec3 dir = dir3 * glm::mat3(glm::yawPitchRoll(-userData.look.x, -userData.look.y, -userData.look.z));
+							dir.z = 0.0f;
 
 							auto body = userData.player->get<game::Physics>().getAs<physx::PxRigidDynamic>();
 							const auto v = convert<glm::vec3>(body->getLinearVelocity());
 
-							userData.player->get<game::Physics>().applyAcceleration(calculateForce(dir3, v));
+							userData.player->get<game::Physics>().applyAcceleration(calculateForce(dir, v));
 						}
 						return BIND::RESULT::CONTINUE;
 					});
