@@ -13,6 +13,34 @@
 
 #include "Renderer.h"
 
+using namespace physx;
+
+struct FilterCallbackHandler : public physx::PxSimulationEventCallback
+{
+	// Inherited via PxSimulationEventCallback
+	virtual void onConstraintBreak(PxConstraintInfo* constraints, PxU32 count) override {
+	}
+	virtual void onWake(PxActor** actors, PxU32 count) override {
+	}
+	virtual void onSleep(PxActor** actors, PxU32 count) override {
+	}
+	virtual void onContact(const PxContactPairHeader& pairHeader, const PxContactPair* pairs, PxU32 nbPairs) override {
+		WeakObject obj{
+			.index = std::bit_cast<Index<Everything>>(pairHeader.actors[0]->userData),
+			.proxy = *Global<Everything*>
+		};
+
+		if (obj.isNotNull() && obj.has<game::Player>()) {
+			obj.get<game::Player>().onGround = true;
+		}
+
+		std::cout << "contact or something\n";
+	}
+	virtual void onTrigger(PxTriggerPair* pairs, PxU32 count) override {
+	}
+	virtual void onAdvance(const PxRigidBody* const* bodyBuffer, const PxTransform* poseBuffer, const PxU32 count) override {
+	}
+};
 
 class MyAllocator : public physx::PxDefaultAllocator
 {
@@ -49,10 +77,13 @@ namespace game
 		physx::PxScene* scene;
 		physx::PxCpuDispatcher* cpuDispatcher;
 		physx::PxMaterial* material;
+		physx::PxMaterial* playerMaterial;
 		physx::PxDefaultAllocator allocator{};
 		physx::PxDefaultErrorCallback errorCallback{};
-		//MyAllocator allocator{};
-		//MyErrorCallback errorCallback{};
+
+		FilterCallbackHandler handler{};
+
+		QualifiedObject player;
 
 		Everything everything;
 		int32_t tick = 0;

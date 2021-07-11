@@ -5,6 +5,9 @@
 
 #include <serial/Serializer.h>
 
+#include <wglm/gtx/quaternion.hpp>
+#include <wglm/gtx/transform.hpp>
+
 #include <PxPhysicsAPI.h>
 
 enum class ModelEnum
@@ -35,14 +38,48 @@ namespace game
 
 	struct Transform
 	{
-		glm::mat4 transform;
+		glm::vec3 pos{ 0.0f, 0.0f, 0.0f };
+		glm::quat quat{};
+		glm::vec3 scale{ 1.0f, 1.0f, 1.0f };
+		glm::mat4 getTransform() {
+			return glm::translate(this->pos) * glm::toMat4(this->quat) * glm::scale(this->scale);
+		};
 	};
 
 	struct Physics
 	{
 		physx::PxActor* actor;
+
+		template<class T>
+		T* getAs() {
+			return static_cast<physx::PxRigidDynamic*>(this->actor);
+		}
+
+		void applyAcceleration(glm::vec3 force) {
+			static_cast<physx::PxRigidDynamic*>(this->actor)->addForce(
+				physx::PxVec3(force.x, force.y, force.z),
+				physx::PxForceMode::eACCELERATION
+			);
+		}
+	};
+
+	struct Player
+	{
+		bool onGround = false;
 	};
 }
+
+template<>
+struct serial::Serializable<game::Player>
+{
+	inline const static std::string_view typeName = "Player";
+
+	ALL_DEF(game::Player) {
+		return serializer.runAll<Selector>(
+			ALL(onGround)
+			);
+	}
+};
 
 template<>
 struct serial::Serializable<ModelEnum>
@@ -84,7 +121,8 @@ struct serial::Serializable<game::Transform>
 
 	ALL_DEF(game::Transform) {
 		return serializer.runAll<Selector>(
-			ALL(transform)
+			ALL(pos),
+			ALL(quat)
 			);
 	};
 };

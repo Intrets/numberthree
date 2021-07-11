@@ -6,6 +6,7 @@
 #include <game/ui/ConstructDebugUI.h>
 #include <game/GameState.h>
 #include <game/player/PlayerInfo.h>
+#include <game/Game.h>
 
 #include <ui/State.h>
 #include <ui/ControlState.h>
@@ -50,15 +51,21 @@ void prepareRender(
 	auto& gameState = playerInfo.gameState;
 	auto& uiState = playerInfo.uiState;
 
+	glm::vec3 p{};
+	if (playerInfo.player.isQualified()) {
+		p = playerInfo.player->get<game::Transform>().pos;
+	}
+
 	int32_t frameSizeX, frameSizeY;
 	glfwGetFramebufferSize(window, &frameSizeX, &frameSizeY);
 	float ratio = frameSizeX / static_cast<float>(frameSizeY);
 	glm::vec2 viewport(ratio, 1.0f);
 	viewport *= misc::Option<misc::OPTION::CL_VIEWPORTSCALE, float>::getVal();
 	renderInfo.frameSize = { frameSizeX, frameSizeY };
+
 	renderInfo.cameraInfo = {
 		.x = frameSizeX, .y = frameSizeY,
-		.camPos = playerInfo.pos,
+		.camPos = p + glm::vec3(0.0f, 0.0f, 1.8f),
 		.rotation = glm::yawPitchRoll(-playerInfo.look.x, -playerInfo.look.y, -playerInfo.look.z),
 		.P = glm::perspective(glm::radians(90.0f), ratio, 0.1f, 1000.0f),
 		.viewPort = glm::vec3(viewport, 200.0f) };
@@ -94,7 +101,7 @@ void mainLoop(GLFWwindow* window, std::chrono::steady_clock::time_point startTim
 
 	Renderer renderer;
 
-	PlayerInfo playerInfo{ gameState, controlState, uiState };
+	PlayerInfo playerInfo{ gameState, controlState, uiState, gameState.player.getObject() };
 
 	glfwSetCharCallback(window, char_callback);
 	glfwSetKeyCallback(window, key_callback);
@@ -154,7 +161,7 @@ void mainLoop(GLFWwindow* window, std::chrono::steady_clock::time_point startTim
 		controlState.cycleStates();
 		glfwPollEvents();
 
-		uiState.updateCursor(window, { playerInfo.pos });
+		uiState.updateCursor(window, { glm::vec2() });
 
 		uiState.run(playerInfo);
 

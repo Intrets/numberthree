@@ -4,6 +4,8 @@
 #include <wglm/gtc/matrix_transform.hpp>
 #include <wglm/gtx/euler_angles.hpp>
 
+#include <mem/Everything.h>
+
 namespace game
 {
 	struct GameState;
@@ -15,17 +17,17 @@ namespace ui
 	class ControlState;
 }
 
-inline static int test{};
 struct PlayerInfo
 {
-	glm::vec3 pos = { 0.0f, 0.0f, 10.0f };
 	glm::vec3 look = { 0, 0, 0 };
+
+	QualifiedObject player;
 
 	game::GameState& gameState;
 	ui::ControlState& controlState;
 	ui::State& uiState;
 
-	PlayerInfo(game::GameState& gameState_, ui::ControlState& controlState_, ui::State& uiState_) :
-		gameState(gameState_), controlState(controlState_), uiState(uiState_) {
+	PlayerInfo(game::GameState& gameState_, ui::ControlState& controlState_, ui::State& uiState_, WeakObject player_) :
+		gameState(gameState_), controlState(controlState_), uiState(uiState_), player(player_) {
 	}
 };

@@ -40,15 +40,11 @@ void Renderer::render(GLFWwindow* window, RenderInfo const& renderInfo) {
 	//	}
 	//}
 
-	glm::mat4 VP = renderInfo.cameraInfo.P *
-		renderInfo.cameraInfo.rotation *
-		glm::translate(-renderInfo.cameraInfo.camPos);
-
 	for (size_t i = 0; i < static_cast<size_t>(ModelEnum::MAX); i++) {
 		this->modelRenderers[i].render(
 			ogs::GeneralConfiguration(),
 			renderInfo.modelRenderInfo[i],
-			VP,
+			renderInfo.cameraInfo.VP(),
 			renderInfo.cameraInfo.camPos,
 			target,
 			viewport

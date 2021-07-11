@@ -6,6 +6,8 @@
 
 #include <render/loaders/ModelLoader.h>
 
+#include <mem/Global.h>
+
 #include <PxPhysicsAPI.h>
 
 #include <wglm/gtx/quaternion.hpp>
@@ -18,6 +20,34 @@ void SetupDefaultRigidDynamic(physx::PxRigidDynamic& body, bool kinematic = fals
 	//body.setRigidBodyFlag(physx::PxRigidBodyFlag::eKINEMATIC, kinematic);
 }
 
+
+struct FilterGroup
+{
+	enum : physx::PxU32
+	{
+		PLAYER = 1 << 0,
+		WORLD = 1 << 1,
+	};
+};
+
+physx::PxFilterFlags SampleSubmarineFilterShader(
+	physx::PxFilterObjectAttributes attributes0, physx::PxFilterData filterData0,
+	physx::PxFilterObjectAttributes attributes1, physx::PxFilterData filterData1,
+	physx::PxPairFlags& pairFlags, const void* constantBlock, physx::PxU32 constantBlockSize) {
+	// let triggers through
+	if (physx::PxFilterObjectIsTrigger(attributes0) || physx::PxFilterObjectIsTrigger(attributes1)) {
+		pairFlags = physx::PxPairFlag::eTRIGGER_DEFAULT;
+		return physx::PxFilterFlag::eDEFAULT;
+	}
+	// generate contacts for all that were not filtered above
+	pairFlags = physx::PxPairFlag::eCONTACT_DEFAULT;
+
+	if (filterData0.word0 & FilterGroup::PLAYER) {
+		pairFlags |= physx::PxPairFlag::eNOTIFY_TOUCH_FOUND;
+	}
+
+	return physx::PxFilterFlag::eDEFAULT;
+}
 
 void game::GameState::runTick() {
 	this->tick++;
@@ -39,16 +69,15 @@ void game::GameState::runTick() {
 		if (changes[i]->userData == nullptr) {
 			continue;
 		}
-		auto t = static_cast<physx::PxRigidDynamic*>(changes[i])->getGlobalPose();
-		glm::vec3 p{ t.p.x, t.p.y, t.p.z };
-		glm::quat q{ t.q.x, t.q.y, t.q.z , t.q.w };
 
 		WeakObject obj{
 			.index = std::bit_cast<Index<Everything>>(changes[i]->userData),
 			.proxy = &everything
 		};
 
-		auto ptr = obj.get<Transform>().transform = glm::translate(p) * glm::toMat4(q);
+		const auto t = static_cast<physx::PxRigidDynamic*>(changes[i])->getGlobalPose();
+		obj.get<Transform>().quat = { t.q.x, t.q.y, t.q.z , t.q.w };
+		obj.get<Transform>().pos = { t.p.x, t.p.y, t.p.z };
 	}
 	Global<misc::Timer>->endTiming("px update");
 
@@ -58,11 +87,17 @@ void game::GameState::runTick() {
 
 void game::GameState::addRenderInfo(RenderInfo& renderInfo) {
 	this->everything.match([&](Model& model, Transform& transform) {
-		renderInfo.addModel(model.model, transform.transform);
+		renderInfo.addModel(model.model, transform.getTransform());
 		});
+
+	if (this->player.isQualified()) {
+		//renderInfo.cameraInfo.V = this->player->get<Transform>().transform;
+	}
 }
 
 void game::GameState::init() {
+	Global<Everything*>.provide(new (Everything*)(&this->everything));
+
 	foundation = PxCreateFoundation(PX_PHYSICS_VERSION, allocator,
 		errorCallback);
 	if (!foundation) {
@@ -99,7 +134,9 @@ void game::GameState::init() {
 	}
 
 	if (!pxSceneDesc.filterShader) {
-		pxSceneDesc.filterShader = physx::PxDefaultSimulationFilterShader;
+		//pxSceneDesc.filterShader = physx::PxDefaultSimulationFilterShader;
+		pxSceneDesc.filterShader = SampleSubmarineFilterShader;
+		pxSceneDesc.simulationEventCallback = &this->handler;
 	}
 
 	scene = physics->createScene(pxSceneDesc);
@@ -107,14 +144,47 @@ void game::GameState::init() {
 		assert(0);
 		std::terminate();
 	}
-	this->material = physics->createMaterial(1.5f, 1.5f, 0.5f);
+	this->material = physics->createMaterial(0.0f, 0.0f, 0.5f);
+	this->playerMaterial = physics->createMaterial(0.0f, 0.0f, 0.0f);
 
+	// player object
+	{
+		auto obj = this->everything.make();
+
+		this->player = obj;
+
+		obj.add<Transform>();
+		obj.add<Model>(ModelEnum::CUBE);
+		obj.add<Player>();
+
+		physx::PxRigidDynamic* box = physx::PxCreateDynamic(
+			*this->physics,
+			physx::PxTransform(physx::PxVec3(0.0f, 0.0f, 3.0f)),
+			physx::PxBoxGeometry(physx::PxVec3(1.0f, 1.0f, 3.0f)),
+			*this->playerMaterial,
+			1.0f
+		);
+		physx::PxShape* shapes;
+		box->getShapes(&shapes, 1, 0);
+		physx::PxFilterData filterData;
+
+		filterData.word0 = FilterGroup::PLAYER;
+		shapes->setSimulationFilterData(filterData);
+
+		obj.add<Physics>(box);
+
+		box->setMassSpaceInertiaTensor(physx::PxVec3(0.0f, 0.0f, 0.0f));
+		box->setRigidBodyFlag(physx::PxRigidBodyFlag::eKINEMATIC, false);
+
+		box->userData = std::bit_cast<void*>(obj.index);
+		this->scene->addActor(*box);
+	}
 
 	{
 		auto obj = this->everything.make();
 
 		obj.add<Model>(ModelEnum::CUBE);
-		obj.add<Transform>(glm::mat4());
+		obj.add<Transform>();
 
 		physx::PxRigidDynamic* box = physx::PxCreateDynamic(
 			*this->physics,
@@ -136,7 +206,7 @@ void game::GameState::init() {
 		auto obj = this->everything.make();
 
 		obj.add<Model>(ModelEnum::CUBE);
-		obj.add<Transform>(glm::mat4());
+		obj.add<Transform>();
 
 		physx::PxRigidDynamic* box = physx::PxCreateDynamic(
 			*this->physics,
@@ -156,7 +226,10 @@ void game::GameState::init() {
 		auto obj = this->everything.make();
 
 		obj.add<Model>(ModelEnum::CUBE);
-		obj.add<Transform>(glm::translate(glm::vec3(0.0f, 0.0f, 0.0f)));
+		obj.add<Transform>(
+			Transform{
+				.pos = glm::vec3(0.0f, 0.0f, 0.0f)
+			});
 
 		physx::PxRigidDynamic* box = physx::PxCreateDynamic(
 			*this->physics,
@@ -178,9 +251,12 @@ void game::GameState::init() {
 
 		obj.add<Model>(ModelEnum::PLANE);
 		obj.add<Transform>(
-			glm::translate(glm::vec3(0.0f, 0.0f, 0.0f)) *
-			glm::scale(glm::vec3(100.0f))
-			);
+			Transform{
+				.pos = glm::vec3(0.0f, 0.0f, 0.0f),
+				.quat = glm::quat(),
+				.scale = glm::vec3(100.0f)
+			}
+		);
 
 		auto plane = physx::PxCreatePlane(
 			*this->physics,
@@ -189,7 +265,7 @@ void game::GameState::init() {
 			*material
 		);
 
-		obj.add<Physics>(plane);
+		//obj.add<Physics>(plane);
 
 		this->scene->addActor(*plane);
 	}
