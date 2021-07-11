@@ -11,6 +11,7 @@ make_module(
 		GameState
 		ui/ConstructDebugUI
 		ui/ConstructMovementHandlers
+		ui/ConstructSpeedometer
 		renderer/GeneralRenderer
 		Renderer
 		Game

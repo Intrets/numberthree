@@ -19,7 +19,7 @@ namespace game
 
 struct UserData
 {
-	glm::vec3 look = { 0, 0, 0 };
+	glm::vec3 look = { 0.0f, glm::half_pi<float>(), 0.0f };
 
 	QualifiedObject player;
 
