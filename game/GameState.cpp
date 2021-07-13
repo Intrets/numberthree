@@ -11,6 +11,7 @@
 #include <PxPhysicsAPI.h>
 
 #include <wglm/gtx/quaternion.hpp>
+#include <wglm/gtx/euler_angles.hpp>
 
 #include <misc/Timer.h>
 
@@ -27,6 +28,8 @@ struct FilterGroup
 	{
 		PLAYER = 1 << 0,
 		WORLD = 1 << 1,
+		PROJECTILE = 1 << 2,
+		DESTRUCTIBLE = 1 << 3,
 	};
 };
 
@@ -43,14 +46,118 @@ physx::PxFilterFlags SampleSubmarineFilterShader(
 	pairFlags = physx::PxPairFlag::eCONTACT_DEFAULT;
 
 	if (filterData0.word0 & FilterGroup::PLAYER) {
-		pairFlags |= physx::PxPairFlag::eNOTIFY_TOUCH_FOUND | PxPairFlag::ePRE_SOLVER_VELOCITY;
+		pairFlags |= physx::PxPairFlag::eNOTIFY_TOUCH_FOUND;
+	}
+
+	if ((filterData0.word0 & FilterGroup::DESTRUCTIBLE) && (filterData1.word0 & FilterGroup::PROJECTILE)) {
+		pairFlags |= physx::PxPairFlag::eNOTIFY_TOUCH_FOUND;
+	}
+
+	//if (filterData0.word0 & FilterGroup::PROJECTILE) {
+	//	pairFlags |= PxPairFlag::eNOTIFY_TOUCH_FOUND;
+	//}
+	if (filterData0.word0 & FilterGroup::PROJECTILE) {
+		pairFlags |= PxPairFlag::eNOTIFY_TOUCH_FOUND;
 	}
 
 	return physx::PxFilterFlag::eDEFAULT;
 }
 
+void game::GameState::shootProjectile(glm::vec3 const pos, glm::vec3 const dir, float speed) {
+	auto obj = this->everything.make();
+	const glm::vec3 scale(0.5f);
+
+	obj.add<Model>(ModelEnum::CUBE);
+	obj.add<Transform>().scale = scale * glm::vec3(1.0f, 1.0f, 5.0f);
+	obj.add<Explosive>();
+
+	auto box = this->physics->createRigidDynamic(PxTransform(convert<PxVec3>(pos)));
+
+	PxFilterData filterData;
+	filterData.word0 = FilterGroup::PROJECTILE;
+
+	//physx::PxRigidDynamic* box = physx::PxCreateDynamic(
+	//	*this->physics,
+	//	physx::PxTransform(convert<PxVec3>(pos)),
+	//	physx::PxBoxGeometry(convert<PxVec3>(scale)),
+	//	*this->material,
+	//	1.0f
+	//);
+
+	//auto b = PxBoxGeometry(convert<PxVec3>(scale));
+	static uintptr_t g = 0;
+
+	for (int32_t i = -2; i < 2; i++) {
+		auto shape = physics->createShape(
+			PxBoxGeometry(convert<PxVec3>(scale)),
+			*this->material,
+			true
+		);
+		shape->setSimulationFilterData(filterData);
+		shape->userData = (void*)g++;
+		shape->setLocalPose(PxTransform(PxVec3(0.0f, 0.0f, 2.0f * i)));
+
+		box->attachShape(*shape);
+
+		shape->release();
+	}
+
+	//physx::PxShape* shapes;
+	//box->getShapes(&shapes, 1, 0);
+	//PxFilterData filterData;
+
+	//filterData.word0 = FilterGroup::PROJECTILE | FilterGroup::DESTRUCTIBLE;
+	//filterData.word0 = FilterGroup::PROJECTILE;
+	//shapes->setSimulationFilterData(filterData);
+
+	box->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
+	box->setLinearVelocity(convert<PxVec3>(dir * speed));
+	box->userData = std::bit_cast<void*>(obj.index);
+
+	PxRigidBodyExt::updateMassAndInertia(*box, 1.0f);
+
+	this->scene->addActor(*box);
+}
+
+void game::GameState::shootTwirlyRocketTest(glm::vec3 const pos, glm::quat quat, glm::vec3 const dir, float speed) {
+	auto obj = this->everything.make();
+	glm::vec3 const scale{ 1.5f, 0.3f, 0.3f };
+
+	obj.add<PhysicsForce>(glm::vec3(100.0f, 0.0f, 0.0f));
+	obj.add<Model>(ModelEnum::CUBE);
+	auto& transform = obj.add<Transform>();
+	transform.scale = scale;
+	transform.quat = quat;
+	transform.pos = pos;
+
+	physx::PxRigidDynamic* rocket = physx::PxCreateDynamic(
+		*this->physics,
+		physx::PxTransform(convert<PxVec3>(pos + dir * 3.0f)) * PxTransform(convert<PxQuat>(quat)),
+		physx::PxBoxGeometry(convert<PxVec3>(scale)),
+		*this->material,
+		1.0f
+	);
+
+	PxFilterData filterData;
+	filterData.word0 = FilterGroup::PROJECTILE;
+	PxShape* shape;
+	rocket->getShapes(&shape, 1);
+	shape->setQueryFilterData(filterData);
+
+	rocket->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
+	//rocket->setLinearVelocity(convert<PxVec3>(dir * speed));
+	rocket->userData = std::bit_cast<void*>(obj.index);
+
+	//obj.add<Physics>(rocket);
+	this->scene->addActor(*rocket);
+}
+
 void game::GameState::runTick() {
 	this->tick++;
+
+	this->everything.match([](PhysicsForce& physicsForce, Physics& physics) {
+		physics.applyAcceleration(physicsForce.force);
+		});
 
 	const physx::PxReal stepSize = 1.0f / 60.0f;
 
@@ -81,8 +188,7 @@ void game::GameState::runTick() {
 	}
 	Global<misc::Timer>->endTiming("px update");
 
-	rand();
-
+	this->everything.collectRemoved();
 }
 
 void game::GameState::addRenderInfo(RenderInfo& renderInfo) {
@@ -179,26 +285,38 @@ void game::GameState::init() {
 		this->scene->addActor(*box);
 	}
 
-	// big box
 	{
-		auto obj = this->everything.make();
-
-		obj.add<Model>(ModelEnum::CUBE);
-		obj.add<Transform>().scale = glm::vec3(30.0f, 30.0f, 1.0f);
-
-		physx::PxRigidDynamic* box = physx::PxCreateDynamic(
-			*this->physics,
-			physx::PxTransform(physx::PxVec3(0.0f, 20.0f, 100.1f)),
-			physx::PxBoxGeometry(physx::PxVec3(30.0f, 30.0f, 1.0f)),
-			*this->material,
-			1.0f
-		);
-
-		box->userData = std::bit_cast<void*>(obj.index);
-
-		SetupDefaultRigidDynamic(*box);
-		this->scene->addActor(*box);
+		this->shootProjectile({ 30.0f, 30.0f, 5.0f }, { 1.0f, 0.0f, 0.0f }, 10.0f);
+		this->shootProjectile({ 50.0f, 30.0f, 5.0f }, { -1.0f, 0.0f, 0.0f }, 10.0f);
 	}
+
+
+	// big box
+	//{
+	//	auto obj = this->everything.make();
+
+	//	obj.add<Model>(ModelEnum::CUBE);
+	//	obj.add<Transform>().scale = glm::vec3(30.0f, 30.0f, 1.0f);
+
+	//	physx::PxRigidDynamic* box = physx::PxCreateDynamic(
+	//		*this->physics,
+	//		physx::PxTransform(physx::PxVec3(0.0f, 20.0f, 100.1f)),
+	//		physx::PxBoxGeometry(physx::PxVec3(30.0f, 30.0f, 1.0f)),
+	//		*this->material,
+	//		1.0f
+	//	);
+
+	//	physx::PxShape* shapes;
+	//	box->getShapes(&shapes, 1, 0);
+	//	physx::PxFilterData filterData;
+
+	//	filterData.word0 = FilterGroup::DESTRUCTIBLE;
+	//	shapes->setSimulationFilterData(filterData);
+
+	//	box->userData = std::bit_cast<void*>(obj.index);
+
+	//	this->scene->addActor(*box);
+	//}
 
 	// small box under big box
 	{
@@ -210,7 +328,7 @@ void game::GameState::init() {
 		physx::PxRigidDynamic* box = physx::PxCreateDynamic(
 			*this->physics,
 			physx::PxTransform(physx::PxVec3(5.0f, 25.0f, 1.1f)),
-			physx::PxBoxGeometry(physx::PxVec3(1.0f, 1.0f, 3.0f)),
+			physx::PxBoxGeometry(physx::PxVec3(1.0f, 1.0f, 1.0f)),
 			*this->material,
 			1.0f
 		);

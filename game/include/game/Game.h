@@ -7,19 +7,67 @@
 
 #include <mem/Everything.h>
 
+#include <misc/Misc.h>
+
 #include <wglm/gtx/quaternion.hpp>
 #include <wglm/gtx/transform.hpp>
 
 #include <PxPhysicsAPI.h>
+
+template<class From>
+struct Convert<physx::PxQuat, From>
+{
+	using To = physx::PxQuat;
+
+	static inline To run(From const from) {
+		if constexpr (std::is_same_v<To, From>) {
+			return from;
+		}
+		else {
+			return { from.x, from.y, from.z, from.w };
+		}
+	}
+};
+
+template<class From>
+struct Convert<physx::PxVec3, From>
+{
+	using To = physx::PxVec3;
+
+	static inline To run(From const from) {
+		if constexpr (std::is_same_v<To, From>) {
+			return from;
+		}
+		else {
+			return { from.x, from.y, from.z };
+		}
+	}
+};
 
 namespace game
 {
 	struct GameState;
 }
 
+struct Look
+{
+	float yaw{};
+	float pitch{};
+	float roll{};
+
+	void changePitch(float d);
+	void changeYaw(float d);
+	void changeRoll(float d);
+
+	glm::vec3 getDir();
+	glm::quat getQuat();
+	glm::mat4 getTransform();
+	glm::mat3 getTransform3();
+};
+
 struct UserData
 {
-	glm::vec3 look = { 0.0f, glm::half_pi<float>(), 0.0f };
+	Look look{};
 
 	QualifiedObject player;
 
@@ -39,11 +87,6 @@ constexpr std::string_view modelNames[] = {
 	"2x2Plane.obj"sv,
 	"Cube.obj"sv,
 };
-
-//constexpr std::array<std::string_view, static_cast<size_t>(ModelEnum::MAX)> modelNames{
-//	"2x2Plane.obj"sv,
-//	"Cube.obj"sv,
-//};
 
 namespace game
 {
@@ -83,7 +126,39 @@ namespace game
 	{
 		bool onGround = false;
 	};
+
+	struct Explosive
+	{
+
+	};
+
+	struct PhysicsForce
+	{
+		glm::vec3 force;
+	};
 }
+
+template<>
+struct serial::Serializable<game::PhysicsForce>
+{
+	inline const static std::string_view typeName = "PhysicsForce";
+
+	ALL_DEF(game::PhysicsForce) {
+		return serializer.runAll<Selector>(
+			ALL(force)
+			);
+	}
+};
+
+template<>
+struct serial::Serializable<game::Explosive>
+{
+	inline const static std::string_view typeName = "Explosive";
+
+	ALL_DEF(game::Explosive) {
+		return true;
+	}
+};
 
 template<>
 struct serial::Serializable<game::Player>

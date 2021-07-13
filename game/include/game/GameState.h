@@ -25,16 +25,22 @@ struct FilterCallbackHandler : public physx::PxSimulationEventCallback
 	virtual void onSleep(PxActor** actors, PxU32 count) override {
 	}
 	virtual void onContact(const PxContactPairHeader& pairHeader, const PxContactPair* pairs, PxU32 nbPairs) override {
-		WeakObject obj{
+		WeakObject obj1{
 			.index = std::bit_cast<Index<Everything>>(pairHeader.actors[0]->userData),
 			.proxy = *Global<Everything*>
 		};
 
-		if (obj.isNotNull() && obj.has<game::Player>()) {
-			obj.get<game::Player>().onGround = true;
+		WeakObject obj2{
+			.index = std::bit_cast<Index<Everything>>(pairHeader.actors[1]->userData),
+			.proxy = *Global<Everything*>
+		};
+
+		if (obj1.isNotNull() && obj1.has<game::Player>()) {
+			obj1.get<game::Player>().onGround = true;
+			return;
 		}
 
-		std::cout << "contact or something\n";
+		rand();
 	}
 	virtual void onTrigger(PxTriggerPair* pairs, PxU32 count) override {
 	}
@@ -83,7 +89,8 @@ namespace game
 
 		FilterCallbackHandler handler{};
 
-		void shootProjectile(glm::vec3 dir, float speed);
+		void shootProjectile(glm::vec3 const pos, glm::vec3 const dir, float speed);
+		void shootTwirlyRocketTest(glm::vec3 const pos, glm::quat quat, glm::vec3 const dir, float speed);
 
 		QualifiedObject player;
 

@@ -71,8 +71,8 @@ void prepareRender(
 	renderInfo.cameraInfo = {
 		.x = frameSizeX, .y = frameSizeY,
 		.camPos = p + glm::vec3(0.0f, 0.0f, 1.8f),
-		.rotation = glm::yawPitchRoll(-userData.look.x, -userData.look.y, -userData.look.z),
-		.P = glm::perspective(glm::radians(90.0f), ratio, 0.1f, 1000.0f),
+		.rotation = userData.look.getTransform(),
+		.P = glm::perspective(glm::radians(90.0f), ratio, 0.1f, 1000.0f) * glm::lookAt(glm::vec3(), {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}),
 		.viewPort = glm::vec3(viewport, 200.0f) };
 
 	Global<misc::Timer>->newTiming("gamestate");
