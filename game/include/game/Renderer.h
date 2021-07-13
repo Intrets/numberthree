@@ -10,6 +10,7 @@
 #include <render/loaders/ModelLoader.h>
 
 #include <game/renderer/GeneralRenderer.h>
+#include <game/renderer/GeneralShadowMapRenderer.h>
 #include <game/Game.h>
 
 #include <misc/PathManager.h>
@@ -42,12 +43,20 @@ public:
 	render::HighlightRenderer highlightRenderer{};
 
 	std::vector<render::GeneralRenderer> modelRenderers{};
+	std::vector<render::GeneralShadowMapRenderer> shadowMapRenderers{};
 
 	std::filesystem::path suzannePath = Global<misc::PathManager>->getModelsPath() / "Suzanne.obj";
 	std::filesystem::path groundPath = Global<misc::PathManager>->getModelsPath() / "Cube.obj";
 
 	render::GeneralRenderer suzanneRenderer;
 	render::GeneralRenderer ground;
+
+	render::bwo::Texture2D lightViewPointBuffer{ render::bwo::Texture2DHelper::makeNoFiltering({512,512}) };
+	render::bwo::Texture2D lightViewPointDepthBuffer{ render::bwo::Texture2DHelper::makeDepthBuffer({512,512}) };
+	render::bwo::FrameBuffer lightViewPointTarget;
+
+	render::bwo::Texture2D depthBuffer{ render::bwo::Texture2DHelper::makeDepthBuffer({1024*2, 1024*2}) };
+	render::bwo::FrameBuffer depthTarget;
 
 	Renderer() :
 		suzanneRenderer(render::loadModel(suzannePath.string())),
@@ -56,12 +65,23 @@ public:
 				for (size_t i = 0; i < static_cast<size_t>(ModelEnum::MAX); i++) {
 					auto modelName = modelNames[i];
 					std::filesystem::path path = Global<misc::PathManager>->getModelsPath() / modelName;
-					render::GeneralRenderer ren{ render::loadModel(path.string()) };
-
-					this->modelRenderers.push_back(std::move(ren));
+					{
+						render::GeneralRenderer ren{ render::loadModel(path.string()) };
+						this->modelRenderers.push_back(std::move(ren));
+					}
+					{
+						render::GeneralShadowMapRenderer ren{ render::loadModel(path.string()) };
+						this->shadowMapRenderers.push_back(std::move(ren));
+					}
 				}
 			}
+			this->lightViewPointTarget.bindTextureColor(0, lightViewPointBuffer, 0);
+			this->lightViewPointTarget.bindDepthLayer(lightViewPointDepthBuffer);
+			this->lightViewPointTarget.clear({ 0.5f, 0.5f, 0.5f, 1.0f }, true);
 
+			this->depthTarget.bindDepthLayer(depthBuffer);
+			this->depthTarget.onlyDepth();
+			this->depthTarget.clearDepth();
 	};
 
 

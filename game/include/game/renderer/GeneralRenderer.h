@@ -25,8 +25,6 @@ namespace render
 		bwo::ArrayBuffer<IndexType> indices;
 		int32_t indexSize;
 
-		int32_t size;
-
 		bwo::ArrayBuffer<glm::mat4> transforms{ bwo::BufferHint::STREAM_DRAW };
 
 		bwo::VertexArrayObject <
@@ -50,9 +48,10 @@ namespace render
 			> VAO;
 
 		bwo::UniformTexture2D texture_t{ "texture_t", program, 0 };
+		bwo::UniformTexture2D shadowMap_t{ "shadowMap_t", program, 1 };
 		bwo::UniformMatrix4fv VP{ "VP", program };
-		bwo::Uniform3fv camPos{ "camPos", program };
-		bwo::Uniform1f time{ "time", program };
+		bwo::UniformMatrix4fv lightVP{ "lightVP", program };
+		bwo::Uniform3fv lightPos{ "lightPos", program };
 
 		GeneralRenderer() = default;
 		GeneralRenderer(
@@ -74,7 +73,10 @@ namespace render
 		void render(
 			ogs::Configuration const& config,
 			std::vector<glm::mat4> const& transforms,
+			glm::vec3 lightPos,
+			bwo::Texture2D const& shadowMap,
 			glm::mat4 VP,
+			glm::mat4 lightVP,
 			glm::vec3 camPos,
 			bwo::FrameBuffer& target,
 			glm::ivec4 viewport

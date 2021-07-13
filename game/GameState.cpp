@@ -277,7 +277,7 @@ void game::GameState::init() {
 
 		physx::PxRigidDynamic* box = physx::PxCreateDynamic(
 			*this->physics,
-			physx::PxTransform(physx::PxVec3(30.0f, 0.0f, 3.0f)),
+			physx::PxTransform(physx::PxVec3(100.0f, 0.0f, 3.0f)),
 			physx::PxBoxGeometry(physx::PxVec3(1.0f, 1.0f, 3.0f)),
 			*this->playerMaterial,
 			1.0f
@@ -304,32 +304,32 @@ void game::GameState::init() {
 	}
 
 
-	// big box
-	//{
-	//	auto obj = this->everything.make();
+	 //big box
+	{
+		auto obj = this->everything.make();
 
-	//	obj.add<Model>(ModelEnum::CUBE);
-	//	obj.add<Transform>().scale = glm::vec3(30.0f, 30.0f, 1.0f);
+		obj.add<Model>(ModelEnum::CUBE);
+		obj.add<Transform>().scale = glm::vec3(30.0f, 30.0f, 10.0f);
 
-	//	physx::PxRigidDynamic* box = physx::PxCreateDynamic(
-	//		*this->physics,
-	//		physx::PxTransform(physx::PxVec3(0.0f, 20.0f, 100.1f)),
-	//		physx::PxBoxGeometry(physx::PxVec3(30.0f, 30.0f, 1.0f)),
-	//		*this->material,
-	//		1.0f
-	//	);
+		physx::PxRigidDynamic* box = physx::PxCreateDynamic(
+			*this->physics,
+			physx::PxTransform(physx::PxVec3(0.0f, 20.0f, 100.1f)),
+			physx::PxBoxGeometry(physx::PxVec3(30.0f, 30.0f, 10.0f)),
+			*this->material,
+			1.0f
+		);
 
-	//	physx::PxShape* shapes;
-	//	box->getShapes(&shapes, 1, 0);
-	//	physx::PxFilterData filterData;
+		physx::PxShape* shapes;
+		box->getShapes(&shapes, 1, 0);
+		physx::PxFilterData filterData;
 
-	//	filterData.word0 = FilterGroup::DESTRUCTIBLE;
-	//	shapes->setSimulationFilterData(filterData);
+		filterData.word0 = FilterGroup::DESTRUCTIBLE;
+		shapes->setSimulationFilterData(filterData);
 
-	//	box->userData = std::bit_cast<void*>(obj.index);
+		box->userData = std::bit_cast<void*>(obj.index);
 
-	//	this->scene->addActor(*box);
-	//}
+		this->scene->addActor(*box);
+	}
 
 	// small box under big box
 	{
@@ -431,7 +431,7 @@ void game::GameState::init() {
 
 		auto plane = physx::PxCreatePlane(
 			*this->physics,
-			physx::PxPlane(physx::PxVec3(0, 0.4f, 1).getNormalized(), 0),
+			physx::PxPlane(physx::PxVec3(0, 1, 1).getNormalized(), 0),
 			*material
 		);
 

@@ -9,7 +9,10 @@
 void render::GeneralRenderer::render(
 	ogs::Configuration const& config,
 	std::vector<glm::mat4> const& transforms_,
+	glm::vec3 lightPos_,
+	bwo::Texture2D const& shadowMap,
 	glm::mat4 VP_,
+	glm::mat4 lightVP_,
 	glm::vec3 camPos_,
 	bwo::FrameBuffer& target,
 	glm::ivec4 viewport) {
@@ -29,13 +32,13 @@ void render::GeneralRenderer::render(
 
 	this->transforms.set(transforms_);
 	this->VP.set(VP_);
-	this->camPos.set(glm::vec3(sin(test / 30.0f), cos(test / 41.0f), sin(test / 50.0f) * cos(test / 70.0f)) * 50.0f);
-	this->time.set(test * 3.0f);
-
+	this->lightVP.set(lightVP_);
+	this->lightPos.set(lightPos_);
 
 	static bwo::Texture2D tex = load2DTexture(Global<misc::PathManager>->getTexturesPath() / "dev.dds");
 
 	this->texture_t.set(tex);
+	this->shadowMap_t.set(shadowMap);
 
 	target.draw(
 		viewport,

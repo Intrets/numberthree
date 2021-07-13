@@ -13,6 +13,7 @@ make_module(
 		ui/ConstructMovementHandlers
 		ui/ConstructSpeedometer
 		renderer/GeneralRenderer
+		renderer/GeneralShadowMapRenderer
 		Renderer
 		Game
 	CXX_STANDARD 20
@@ -26,6 +27,7 @@ make_module(
 )
 set(SHADER_FILES
 	General
+	GeneralShadowMap
 )
 
 foreach(SHADER ${SHADER_FILES})

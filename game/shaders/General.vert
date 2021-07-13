@@ -6,16 +6,31 @@ layout(location = 2) in vec3 normal;
 
 layout(location = 3) in mat4 M;
 
-uniform mat4 VP;
-uniform vec3 camPos;
+uniform mat4 lightVP;
 
-out vec2 UV;
-out vec3 pos;
+uniform mat4 VP;
+
+//out vec2 UV;
+//out vec4 shadowCoord;
+
+out VS_OUT {
+    vec3 FragPos;
+    vec3 Normal;
+    vec2 TexCoords;
+    vec4 FragPosLightSpace;
+} vs_out;
 
 void main(){
-	UV = uv;
-	pos = (M * vec4(vertex, 1)).xyz - camPos;
-	pos = pos * 10.0;
+//	UV = uv;
+//	gl_Position = VP * M * vec4(vertex, 1);
+//	shadowCoord = lightVP * M * vec4(vertex, 1);
+//	shadowCoord /= shadowCoord.w;
+//	shadowCoord = shadowCoord * 0.5 + 0.5;
+
+	vs_out.FragPos = vec3(M * vec4(vertex, 1.0));
+    vs_out.Normal = transpose(inverse(mat3(M))) * normal;
+    vs_out.TexCoords = uv;
+    vs_out.FragPosLightSpace = lightVP * vec4(vs_out.FragPos, 1.0);
 	gl_Position = VP * M * vec4(vertex, 1);
 }
 
