@@ -14,6 +14,8 @@
 
 #include <PxPhysicsAPI.h>
 
+using namespace physx;
+
 template<class From>
 struct Convert<physx::PxQuat, From>
 {
@@ -120,6 +122,15 @@ namespace game
 				physx::PxForceMode::eACCELERATION
 			);
 		}
+
+		void applyLocalAcceleration(glm::vec3 force, glm::vec3 offset) {
+			PxRigidBodyExt::addLocalForceAtLocalPos(
+				*static_cast<PxRigidDynamic*>(this->actor),
+				convert<PxVec3>(force),
+				convert<PxVec3>(offset),
+				PxForceMode::eFORCE
+			);
+		}
 	};
 
 	struct Player
@@ -135,6 +146,7 @@ namespace game
 	struct PhysicsForce
 	{
 		glm::vec3 force;
+		glm::vec3 offset;
 	};
 }
 

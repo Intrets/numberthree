@@ -119,11 +119,20 @@ void game::GameState::shootProjectile(glm::vec3 const pos, glm::vec3 const dir, 
 	this->scene->addActor(*box);
 }
 
-void game::GameState::shootTwirlyRocketTest(glm::vec3 const pos, glm::quat quat, glm::vec3 const dir, float speed) {
-	auto obj = this->everything.make();
-	glm::vec3 const scale{ 1.5f, 0.3f, 0.3f };
+void game::GameState::shootTwirlyRocketTest(glm::vec3 const pos, glm::quat quat, float speed) {
+	float randomRotation = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * glm::two_pi<float>();
+	auto randomQuat = glm::quat(glm::vec3(randomRotation, 0.0f, 0.0f)) * glm::quat(glm::vec3(0.0f, -0.7f, 0.0));
+	auto dir = glm::toMat3(quat * randomQuat) * glm::vec3{ 1.0f, 0.0f, 0.0f };
 
-	obj.add<PhysicsForce>(glm::vec3(100.0f, 0.0f, 0.0f));
+	auto obj = this->everything.make();
+	glm::vec3 const scale{ 0.5f, 0.1f, 0.1f };
+
+	obj.add<PhysicsForce>(PhysicsForce{
+		.force = glm::vec3(6.0f, 0.0f, 2.0f) ,
+		//.force = glm::vec3(0.0f, 0.0f, 0.0f) ,
+		.offset = { -0.1f, 0.0f, 0.0f }
+		});
+
 	obj.add<Model>(ModelEnum::CUBE);
 	auto& transform = obj.add<Transform>();
 	transform.scale = scale;
@@ -132,11 +141,12 @@ void game::GameState::shootTwirlyRocketTest(glm::vec3 const pos, glm::quat quat,
 
 	physx::PxRigidDynamic* rocket = physx::PxCreateDynamic(
 		*this->physics,
-		physx::PxTransform(convert<PxVec3>(pos + dir * 3.0f)) * PxTransform(convert<PxQuat>(quat)),
+		physx::PxTransform(convert<PxVec3>(pos + dir)) * PxTransform(convert<PxQuat>(quat * randomQuat)),
 		physx::PxBoxGeometry(convert<PxVec3>(scale)),
 		*this->material,
 		1.0f
 	);
+	rocket->setAngularDamping(10.0f);
 
 	PxFilterData filterData;
 	filterData.word0 = FilterGroup::PROJECTILE;
@@ -145,18 +155,21 @@ void game::GameState::shootTwirlyRocketTest(glm::vec3 const pos, glm::quat quat,
 	shape->setQueryFilterData(filterData);
 
 	rocket->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
-	//rocket->setLinearVelocity(convert<PxVec3>(dir * speed));
+	rocket->setLinearVelocity(convert<PxVec3>(dir * speed));
 	rocket->userData = std::bit_cast<void*>(obj.index);
 
-	//obj.add<Physics>(rocket);
+	obj.add<Physics>(rocket);
 	this->scene->addActor(*rocket);
 }
 
 void game::GameState::runTick() {
 	this->tick++;
 
-	this->everything.match([](PhysicsForce& physicsForce, Physics& physics) {
-		physics.applyAcceleration(physicsForce.force);
+	this->everything.match([](PhysicsForce& physicsForce, Physics& physics, Transform& transform) {
+		physics.applyLocalAcceleration(
+			physicsForce.force,
+			physicsForce.offset
+		);
 		});
 
 	const physx::PxReal stepSize = 1.0f / 60.0f;

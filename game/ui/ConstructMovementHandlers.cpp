@@ -97,23 +97,26 @@ namespace game
 					return BIND::RESULT::CONTINUE;
 				});
 
-			movement.get()->addGlobalBind({ CONTROL::KEY::ACTION0 }, [&](UIInfo& uiInfo, UserData& userData) -> CallBackBindResult
+			movement.get()->addGlobalBind({ CONTROL::KEY::ACTION0, CONTROL::STATE::DOWN }, [&](UIInfo& uiInfo, UserData& userData) -> CallBackBindResult
 				{
-					if (userData.player.isQualified()) {
-						//glm::vec3 dir{ 0.0f, 0.0f, -1.0f };
-						//glm::mat3 m3(glm::yawPitchRoll(-userData.look.x, -userData.look.y, -userData.look.z));
-						//dir = dir * m3;
-						auto dir = userData.look.getDir();
-						//glm::quat test{ m3 };
+					static int i = 0;
+					if (i++ % 1 == 0) {
+						if (userData.player.isQualified()) {
+							auto dir = userData.look.getDir();
 
-						glm::vec3 headHeight{ 0.0f, 0.0f, 1.5f };
+							glm::vec3 headHeight{ 0.0f, 0.0f, 1.5f };
 
-						userData.gameState.shootTwirlyRocketTest(
-							userData.player->get<Transform>().pos + headHeight + dir * 2.0f,
-							userData.look.getQuat(),
-							dir,
-							100.0f
-						);
+							userData.gameState.shootTwirlyRocketTest(
+								userData.player->get<Transform>().pos + headHeight + dir * 2.0f,
+								userData.look.getQuat(),
+								10.0f
+							);
+							userData.gameState.shootTwirlyRocketTest(
+								userData.player->get<Transform>().pos + headHeight + dir * 2.0f,
+								userData.look.getQuat(),
+								10.0f
+							);
+						}
 					}
 					return BIND::RESULT::CONTINUE;
 				});

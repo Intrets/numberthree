@@ -90,7 +90,7 @@ namespace game
 		FilterCallbackHandler handler{};
 
 		void shootProjectile(glm::vec3 const pos, glm::vec3 const dir, float speed);
-		void shootTwirlyRocketTest(glm::vec3 const pos, glm::quat quat, glm::vec3 const dir, float speed);
+		void shootTwirlyRocketTest(glm::vec3 const pos, glm::quat quat, float speed);
 
 		QualifiedObject player;
 
