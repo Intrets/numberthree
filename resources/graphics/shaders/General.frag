@@ -74,21 +74,23 @@ void main(){
     vec3 lightDir = normalize(lightPos - fs_in.FragPos);
 //    float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
 
-	float p = 1 / (1 - projCoords.z);
+	float p = 1 / (1 - projCoords.z );
 	float pp = 1 / (1 - texture(shadowMap_t, projCoords.xy).x);
 
 	float prox = 100.0;
 
 	float m = p;
 	vec2 vm = vec2(0);
+	int vcount = 0;
 	float n = pp;
 	vec2 vn = vec2(0);
 	for (int i = 0; i < 17; i++) {
 		float f = 1 / (1 - texture(shadowMap_t, projCoords.xy + circle[i] / prox).x);
 
-		if (f < m) {
+		if (p - f > 30) {
 			m = f;
-			vm = circle[i] / prox;
+			vm += circle[i] / prox;
+			vcount++;
 		}
 
 		if (f > n) {
@@ -97,13 +99,15 @@ void main(){
 		}
 	}
 
+	vm /= vcount;
+
 	float sshadow = 1.0;
 
 	if (m != p) {
 		vec2 v = projCoords.xy + vm/2;
-		float find = (projCoords.z + (1 - 1/m))/2;
-		vm /= 2;
-		for (int i = 0; i < 10; i++){
+		float find = (projCoords.z + texture(shadowMap_t, projCoords.xy + vm).x)/2;
+		vm /= 4;
+		for (int i = 0; i < 4; i++){
 			if (texture(shadowMap_t, v).x < find) {
 				v -= vm;
 			}
@@ -112,7 +116,34 @@ void main(){
 			}
 			vm /= 2;
 		}
-//		sshadow = 100*length(projCoords.xy - v);
+
+		for (int i = 0; i < 10; i++) {
+			if (texture(shadowMap_t, v).x > find) {
+				v += vm;
+				vm /= 2;
+			}
+			else {
+				break;
+			}
+		}
+
+		float edgeDistance = 1 / (1 - texture(shadowMap_t, v).x);
+		float currentDistance = 1 / (1 - texture(shadowMap_t, projCoords.xy).x);
+		float theScale = (currentDistance - edgeDistance) / edgeDistance;
+		theScale = clamp(theScale, 0.0, 1.0);
+//		theScale /= 2.0;
+
+		float theLength = prox * length(projCoords.xy - v);
+
+		if (theLength < theScale){
+
+			sshadow = 1 - (1 - prox * length(projCoords.xy - v) / theScale);
+		}
+//			sshadow = prox * length(projCoords.xy - v);
+
+//		sshadow = prox * length(projCoords.xy - v) * (theScale);
+//		sshadow = prox * length(projCoords.xy - v) * (theScale);
+//		sshadow = clamp(sshadow, 0, 1);
 	}
 
 
@@ -138,5 +169,8 @@ void main(){
 	float b = texture(shadowMap_t, projCoords.xy).x < projCoords.z - 0.00002 ? 1 : 0;
 	color = vec4(r, g, b, 1.0);
 	color *= sshadow;
+	color.w = 1.0;
+
+	color = texture(texture_t, fs_in.TexCoords) * sshadow;
 	color.w = 1.0;
 }
