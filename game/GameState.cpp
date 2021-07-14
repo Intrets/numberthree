@@ -163,6 +163,9 @@ void game::GameState::shootTwirlyRocketTest(glm::vec3 const pos, glm::quat quat,
 }
 
 void game::GameState::runTick() {
+	Global<render::DebugRenderInfo>->world.addPoint({});
+
+
 	this->tick++;
 
 	this->everything.match([](PhysicsForce& physicsForce, Physics& physics, Transform& transform) {
@@ -277,7 +280,7 @@ void game::GameState::init() {
 
 		physx::PxRigidDynamic* box = physx::PxCreateDynamic(
 			*this->physics,
-			physx::PxTransform(physx::PxVec3(100.0f, 0.0f, 3.0f)),
+			physx::PxTransform(physx::PxVec3(-70.0f, 0.0f, 3.0f)),
 			physx::PxBoxGeometry(physx::PxVec3(1.0f, 1.0f, 3.0f)),
 			*this->playerMaterial,
 			1.0f
@@ -309,12 +312,12 @@ void game::GameState::init() {
 		auto obj = this->everything.make();
 
 		obj.add<Model>(ModelEnum::CUBE);
-		obj.add<Transform>().scale = glm::vec3(30.0f, 30.0f, 10.0f);
+		obj.add<Transform>().scale = glm::vec3(10.0f, 10.0f, 50.0f);
 
 		physx::PxRigidDynamic* box = physx::PxCreateDynamic(
 			*this->physics,
-			physx::PxTransform(physx::PxVec3(0.0f, 20.0f, 100.1f)),
-			physx::PxBoxGeometry(physx::PxVec3(30.0f, 30.0f, 10.0f)),
+			physx::PxTransform(physx::PxVec3(-10.0f, 10.0f, 50.1f)),
+			physx::PxBoxGeometry(physx::PxVec3(10.0f, 10.0f, 50.0f)),
 			*this->material,
 			1.0f
 		);

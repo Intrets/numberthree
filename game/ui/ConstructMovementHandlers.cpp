@@ -1,5 +1,7 @@
 #include "ui/ConstructMovementHandlers.h"
 
+#include <render/BufferWrappers.h>
+
 #include <ui/State.h>
 #include <ui/Constructer.h>
 #include <ui/Invisible.h>
@@ -22,6 +24,22 @@ namespace game
 		// wasd movement in world
 		{
 			UniqueReference<Base, Invisible> movement = Global::getManager().makeUniqueRef<Invisible>();
+
+			movement.get()->addGlobalBind({ CONTROL::KEY::EVERY_TICK }, [](UIInfo& uiInfo, UserData& userData) -> CallBackBindResult {
+				static int count = 0;
+				if (count++ % 60 == 0) {
+					render::bwo::Program::refreshAll();
+				}
+				return ui::BIND::RESULT::CONTINUE;
+				}
+			);
+
+			movement.get()->addGlobalBind({ CONTROL::KEY::F5 }, [](UIInfo& uiInfo, UserData& userData) -> CallBackBindResult {
+				render::bwo::Program::refreshAll();
+
+				return ui::BIND::RESULT::CONTINUE;
+				}
+			);
 
 			movement.get()->addGlobalBind({ CONTROL::KEY::MOUSE_POS_CHANGED, CONTROL::STATE::PRESSED }, [&](UIInfo& uiInfo, UserData& userData) -> CallBackBindResult
 				{
@@ -106,11 +124,6 @@ namespace game
 
 							glm::vec3 headHeight{ 0.0f, 0.0f, 1.5f };
 
-							userData.gameState.shootTwirlyRocketTest(
-								userData.player->get<Transform>().pos + headHeight + dir * 2.0f,
-								userData.look.getQuat(),
-								10.0f
-							);
 							userData.gameState.shootTwirlyRocketTest(
 								userData.player->get<Transform>().pos + headHeight + dir * 2.0f,
 								userData.look.getQuat(),

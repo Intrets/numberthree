@@ -10,6 +10,7 @@ void render::GeneralRenderer::render(
 	ogs::Configuration const& config,
 	std::vector<glm::mat4> const& transforms_,
 	glm::vec3 lightPos_,
+	glm::vec3 viewPos_,
 	bwo::Texture2D const& shadowMap,
 	glm::mat4 VP_,
 	glm::mat4 lightVP_,
@@ -34,6 +35,7 @@ void render::GeneralRenderer::render(
 	this->VP.set(VP_);
 	this->lightVP.set(lightVP_);
 	this->lightPos.set(lightPos_);
+	this->viewPos.set(viewPos_);
 
 	static bwo::Texture2D tex = load2DTexture(Global<misc::PathManager>->getTexturesPath() / "dev.dds");
 

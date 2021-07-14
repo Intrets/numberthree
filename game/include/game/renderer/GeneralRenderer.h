@@ -17,7 +17,8 @@ namespace render
 		using IndexType = uint16_t;
 		static constexpr GLenum GLIndexType = GL_UNSIGNED_SHORT;
 
-		bwo::Program program{ General_vert, General_frag, "GeneralRenderer" };
+		//bwo::Program program{ General_vert, General_frag, "GeneralRenderer" };
+		bwo::Program program{ "General.vert", "General.frag", "GeneralRenderer", 0};
 
 		bwo::ArrayBuffer<glm::vec3> model;
 		bwo::ArrayBuffer<glm::vec2> uv;
@@ -52,6 +53,7 @@ namespace render
 		bwo::UniformMatrix4fv VP{ "VP", program };
 		bwo::UniformMatrix4fv lightVP{ "lightVP", program };
 		bwo::Uniform3fv lightPos{ "lightPos", program };
+		bwo::Uniform3fv viewPos{ "viewPos", program };
 
 		GeneralRenderer() = default;
 		GeneralRenderer(
@@ -74,6 +76,7 @@ namespace render
 			ogs::Configuration const& config,
 			std::vector<glm::mat4> const& transforms,
 			glm::vec3 lightPos,
+			glm::vec3 viewPos,
 			bwo::Texture2D const& shadowMap,
 			glm::mat4 VP,
 			glm::mat4 lightVP,

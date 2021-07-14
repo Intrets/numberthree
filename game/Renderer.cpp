@@ -31,11 +31,11 @@ void Renderer::render(GLFWwindow* window, RenderInfo const& renderInfo) {
 
 	depthTarget.clearDepth();
 
-	glm::vec3 lightPos{ 100.0f, 0.0f, 120.0f };
+	glm::vec3 lightPos{ 30.0f, 5.0f, 50.0f };
 	auto lightVP =
 		glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 230.0f) *
 		//glm::ortho(-120.0f, 120.0f, -120.0f, 120.0f, 30.0f, 230.0f) *
-		glm::lookAt(lightPos, {}, { 0.0f, 1.0f, 0.0f });
+		glm::lookAt(lightPos, {-10.0f, 10.0f, 5.0f}, { 0.0f, 1.0f, 0.0f });
 
 	for (size_t i = 0; i < static_cast<size_t>(ModelEnum::MAX); i++) {
 		this->shadowMapRenderers[i].render(
@@ -52,6 +52,7 @@ void Renderer::render(GLFWwindow* window, RenderInfo const& renderInfo) {
 			ogs::GeneralConfiguration(),
 			renderInfo.modelRenderInfo[i],
 			lightPos,
+			renderInfo.cameraInfo.camPos,
 			depthBuffer,
 			renderInfo.cameraInfo.VP(),
 			lightVP,
@@ -64,6 +65,7 @@ void Renderer::render(GLFWwindow* window, RenderInfo const& renderInfo) {
 			ogs::GeneralConfiguration(),
 			renderInfo.modelRenderInfo[i],
 			lightPos,
+			renderInfo.cameraInfo.camPos,
 			depthBuffer,
 			lightVP,
 			lightVP,

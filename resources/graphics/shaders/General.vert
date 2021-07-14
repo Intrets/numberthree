@@ -27,8 +27,6 @@ void main(){
 //	shadowCoord /= shadowCoord.w;
 //	shadowCoord = shadowCoord * 0.5 + 0.5;
 
-
-
 	vs_out.FragPos = vec3(M * vec4(vertex, 1.0));
     vs_out.Normal = transpose(inverse(mat3(M))) * normal;
     vs_out.TexCoords = uv;
