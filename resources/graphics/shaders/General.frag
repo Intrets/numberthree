@@ -98,12 +98,11 @@ void main(){
 	}
 
 	float sshadow = 1.0;
-	float g = 0.5;
 
-	if (m/p > 0.95) {
+	if (m != p) {
 		vec2 v = projCoords.xy + vm/2;
 		float find = (projCoords.z + (1 - 1/m))/2;
-		vm /= 4;
+		vm /= 2;
 		for (int i = 0; i < 10; i++){
 			if (texture(shadowMap_t, v).x < find) {
 				v -= vm;
@@ -114,7 +113,6 @@ void main(){
 			vm /= 2;
 		}
 //		sshadow = 100*length(projCoords.xy - v);
-		g = 100*length(projCoords.xy - v);
 	}
 
 
@@ -135,7 +133,7 @@ void main(){
 //	color = texture(texture_t, fs_in.TexCoords) * vec4(lighting, lighting, lighting, 1.0);
 
 	// float g = p/3000;
-	// float g = n /  3000;
+	float g = n/  3000;
 	float r = m / 3000;
 	float b = texture(shadowMap_t, projCoords.xy).x < projCoords.z - 0.00002 ? 1 : 0;
 	color = vec4(r, g, b, 1.0);
