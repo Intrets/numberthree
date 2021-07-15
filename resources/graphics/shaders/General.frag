@@ -77,7 +77,7 @@ void main(){
 	float p = 1 / (1 - projCoords.z );
 	float pp = 1 / (1 - texture(shadowMap_t, projCoords.xy).x);
 
-	float prox = 100.0;
+	float prox = 200.0;
 
 	float m = p;
 	vec2 vm = vec2(0);
@@ -102,7 +102,10 @@ void main(){
 	}
 
 	vm /= vmcount;
+	vm = normalize(vm) / prox;
+
 	vn /= vncount;
+	vn = normalize(vn) / prox;
 
 	float sshadow = 1.0;
 
@@ -227,7 +230,7 @@ void main(){
 	color.w = 1.0;
 
 	color = texture(texture_t, fs_in.TexCoords) * lighting;
-	color.g += r/3;
-	color.b += g/3;
+//	color.g += r/3;
+//	color.b += g/3;
 	color.w = 1.0;
 }
