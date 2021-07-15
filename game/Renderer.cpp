@@ -31,7 +31,7 @@ void Renderer::render(GLFWwindow* window, RenderInfo const& renderInfo) {
 
 	depthTarget.clearDepth();
 
-	glm::vec3 lightPos{ 30.0f, 5.0f, 50.0f };
+	glm::vec3 lightPos{ 100.0f, 5.0f, 50.0f };
 	auto lightVP =
 		glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 230.0f) *
 		//glm::ortho(-120.0f, 120.0f, -120.0f, 120.0f, 30.0f, 230.0f) *

@@ -81,30 +81,34 @@ void main(){
 
 	float m = p;
 	vec2 vm = vec2(0);
-	int vcount = 0;
+	int vmcount = 0;
 	float n = pp;
 	vec2 vn = vec2(0);
+	int vncount = 0;
 	for (int i = 0; i < 17; i++) {
 		float f = 1 / (1 - texture(shadowMap_t, projCoords.xy + circle[i] / prox).x);
 
 		if (p - f > 30) {
 			m = f;
 			vm += circle[i] / prox;
-			vcount++;
+			vmcount++;
 		}
 
-		if (f > n) {
+		if (p - f < 30) {
 			n = f;
-			vn = circle[i] / prox;
+			vn += circle[i] / prox;
+			vncount++;
 		}
 	}
 
-	vm /= vcount;
+	vm /= vmcount;
+	vn /= vncount;
 
 	float sshadow = 1.0;
 
 	if (m != p) {
 		vec2 v = projCoords.xy + vm/2;
+//		float find = (projCoords.z + (1 - 1/m))/2;
 		float find = (projCoords.z + texture(shadowMap_t, projCoords.xy + vm).x)/2;
 		vm /= 4;
 		for (int i = 0; i < 4; i++){
@@ -117,7 +121,7 @@ void main(){
 			vm /= 2;
 		}
 
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < 3; i++) {
 			if (texture(shadowMap_t, v).x > find) {
 				v += vm;
 				vm /= 2;
@@ -130,24 +134,75 @@ void main(){
 		float edgeDistance = 1 / (1 - texture(shadowMap_t, v).x);
 		float currentDistance = 1 / (1 - texture(shadowMap_t, projCoords.xy).x);
 		float theScale = (currentDistance - edgeDistance) / edgeDistance;
-		theScale = clamp(theScale, 0.0, 1.0);
+//		theScale = clamp(theScale, 0.0, 1.0);
 //		theScale /= 2.0;
 
 		float theLength = prox * length(projCoords.xy - v);
 
 		if (theLength < theScale){
 
-			sshadow = 1 - (1 - prox * length(projCoords.xy - v) / theScale);
+			sshadow = 1 - (1 - prox * length(projCoords.xy - v) / theScale) / 2;
 		}
 //			sshadow = prox * length(projCoords.xy - v);
 
 //		sshadow = prox * length(projCoords.xy - v) * (theScale);
 //		sshadow = prox * length(projCoords.xy - v) * (theScale);
 //		sshadow = clamp(sshadow, 0, 1);
+
+//		sshadow = theScale;
 	}
 
 
+	if (n != p) {
+		vec2 v = projCoords.xy + vn/2;
+		float find = (texture(shadowMap_t, projCoords.xy).x + texture(shadowMap_t, projCoords.xy + vn).x)/2;
+		vn /= 4;
+		for (int i = 0; i < 4; i++){
+			if (texture(shadowMap_t, v).x > find) {
+				v -= vn;
+			}
+			else {
+				v += vn;
+			}
+			vn /= 2;
+		}
 
+		for (int i = 0; i < 3; i++) {
+			if (texture(shadowMap_t, v).x < find) {
+				v += vn;
+				vn /= 2;
+			}
+			else {
+				break;
+			}
+		}
+
+		float edgeDistance = 1 / (1 - texture(shadowMap_t, v).x);
+		float currentDistance = 1 / (1 - texture(shadowMap_t, projCoords.xy).x);
+		float theScale = -(currentDistance - edgeDistance) / edgeDistance;
+//		theScale = clamp(theScale, 0.0, 1.0);
+//		theScale /= 2.0;
+
+		float theLength = prox * length(projCoords.xy - v);
+
+		if (theLength < theScale){
+
+			sshadow =  0.5 - ( prox * length(projCoords.xy - v) / theScale) / 2;
+		}
+//			sshadow = prox * length(projCoords.xy - v);
+
+//		sshadow = prox * length(projCoords.xy - v) * (theScale);
+//		sshadow = prox * length(projCoords.xy - v) * (theScale);
+//		sshadow = clamp(sshadow, 0, 1);
+//		sshadow = theScale;
+	}
+
+
+	if (sshadow == 1.0){
+		if (texture(shadowMap_t, projCoords.xy).x < projCoords.z - 0.000002){
+			sshadow = 0.0;
+		}
+	}
 
 
     float diffuse = max(dot(lightDir, normal), 0.0);
@@ -160,17 +215,19 @@ void main(){
     vec3 halfwayDir = normalize(lightDir + viewDir);
     spec = pow(max(dot(normal, halfwayDir), 0.0), 32.0);
 
-    float lighting = (ambient + (1.0 - vis) * (diffuse + spec));
+    float lighting = (ambient + (sshadow) * (diffuse + spec));
 //	color = texture(texture_t, fs_in.TexCoords) * vec4(lighting, lighting, lighting, 1.0);
 
 	// float g = p/3000;
-	float g = n/  3000;
+	float g = n / 3000;
 	float r = m / 3000;
 	float b = texture(shadowMap_t, projCoords.xy).x < projCoords.z - 0.00002 ? 1 : 0;
 	color = vec4(r, g, b, 1.0);
 	color *= sshadow;
 	color.w = 1.0;
 
-	color = texture(texture_t, fs_in.TexCoords) * sshadow;
+	color = texture(texture_t, fs_in.TexCoords) * lighting;
+	color.g += r/3;
+	color.b += g/3;
 	color.w = 1.0;
 }

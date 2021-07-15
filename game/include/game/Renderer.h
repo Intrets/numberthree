@@ -55,7 +55,7 @@ public:
 	render::bwo::Texture2D lightViewPointDepthBuffer{ render::bwo::Texture2DHelper::makeDepthBuffer({512,512}) };
 	render::bwo::FrameBuffer lightViewPointTarget;
 
-	render::bwo::Texture2D depthBuffer{ render::bwo::Texture2DHelper::makeDepthBuffer({1024*2, 1024*2}) };
+	render::bwo::Texture2D depthBuffer{ render::bwo::Texture2DHelper::makeDepthBuffer({1024*4, 1024*4}) };
 	render::bwo::FrameBuffer depthTarget;
 
 	Renderer() :
