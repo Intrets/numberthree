@@ -11,6 +11,7 @@
 
 #include <game/renderer/GeneralRenderer.h>
 #include <game/renderer/GeneralShadowMapRenderer.h>
+#include <game/renderer/AssembleRenderer.h>
 #include <game/Game.h>
 
 #include <misc/PathManager.h>
@@ -57,6 +58,8 @@ public:
 
 	render::bwo::Texture2D depthBuffer{ render::bwo::Texture2DHelper::makeDepthBuffer({1024*4, 1024*4}) };
 	render::bwo::FrameBuffer depthTarget;
+
+	render::AssembleRenderer assembleRenderer;
 
 	Renderer() :
 		suzanneRenderer(render::loadModel(suzannePath.string())),

@@ -1,15 +1,13 @@
 #version 330 core
 
 layout(location = 0) out vec4 color;
+layout(location = 1) out float shadow;
 
 uniform sampler2D texture_t;
 uniform sampler2D shadowMap_t;
 
 uniform vec3 viewPos;
 
-//in vec2 UV;
-//in vec4 shadowCoord;
-//
 in VS_OUT {
     vec3 FragPos;
     vec3 Normal;
@@ -77,7 +75,7 @@ void main(){
 	float p = 1 / (1 - projCoords.z );
 	float pp = 1 / (1 - texture(shadowMap_t, projCoords.xy).x);
 
-	float prox = 200.0;
+	float prox = 100.0;
 
 	float m = p;
 	vec2 vm = vec2(0);
@@ -219,18 +217,24 @@ void main(){
     spec = pow(max(dot(normal, halfwayDir), 0.0), 32.0);
 
     float lighting = (ambient + (sshadow) * (diffuse + spec));
+//	float lighting = sshadow;
 //	color = texture(texture_t, fs_in.TexCoords) * vec4(lighting, lighting, lighting, 1.0);
 
-	// float g = p/3000;
-	float g = n / 3000;
-	float r = m / 3000;
-	float b = texture(shadowMap_t, projCoords.xy).x < projCoords.z - 0.00002 ? 1 : 0;
-	color = vec4(r, g, b, 1.0);
-	color *= sshadow;
-	color.w = 1.0;
+//	// float g = p/3000;
+//	float g = n / 3000;
+//	float r = m / 3000;
+//	float b = texture(shadowMap_t, projCoords.xy).x < projCoords.z - 0.00002 ? 1 : 0;
+//	color = vec4(r, g, b, 1.0);
+//	color *= sshadow;
+//	color.w = 1.0;
 
-	color = texture(texture_t, fs_in.TexCoords) * lighting;
+//	gl_FragDepth = fs_in.FragPos.z;
+
+	color = texture(texture_t, fs_in.TexCoords);
+//	color = texture(texture_t, fs_in.TexCoords);
+//	color = vec4(lighting);
+	color.w = 1.0;
+	shadow = lighting;
 //	color.g += r/3;
 //	color.b += g/3;
-	color.w = 1.0;
 }

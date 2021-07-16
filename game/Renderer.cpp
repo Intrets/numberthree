@@ -18,6 +18,12 @@
 void Renderer::render(GLFWwindow* window, RenderInfo const& renderInfo) {
 	render::bwo::FrameBuffer target{ window };
 
+	static render::bwo::Texture2D d{ render::bwo::Texture2DHelper::makeDepthBuffer(renderInfo.frameSize) };
+	static render::bwo::Texture2D albedo{ render::bwo::Texture2DHelper::makeLinearFiltering(renderInfo.frameSize) };
+	static render::bwo::Texture2D shadow{ render::bwo::Texture2DHelper::makeFloatBuffer(renderInfo.frameSize, true) };
+
+	static render::bwo::FrameBuffer target2;
+
 	Global<misc::Timer>->newTiming("Render");
 
 	target.clear({ 0.5f, 0.5f, 0.5f, 1.0f }, true);
@@ -35,7 +41,7 @@ void Renderer::render(GLFWwindow* window, RenderInfo const& renderInfo) {
 	auto lightVP =
 		glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 230.0f) *
 		//glm::ortho(-120.0f, 120.0f, -120.0f, 120.0f, 30.0f, 230.0f) *
-		glm::lookAt(lightPos, {-10.0f, 10.0f, 5.0f}, { 0.0f, 1.0f, 0.0f });
+		glm::lookAt(lightPos, { -10.0f, 10.0f, 5.0f }, { 0.0f, 1.0f, 0.0f });
 
 	for (size_t i = 0; i < static_cast<size_t>(ModelEnum::MAX); i++) {
 		this->shadowMapRenderers[i].render(
@@ -47,6 +53,16 @@ void Renderer::render(GLFWwindow* window, RenderInfo const& renderInfo) {
 		);
 	}
 
+	target2.bindDepthLayer(d);
+	target2.bindTextureColor(0, albedo, 0);
+	target2.bindTextureColor(1, shadow, 0);
+	unsigned int attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+	glBindFramebuffer(GL_FRAMEBUFFER, target2.ID);
+	glDrawBuffers(2, attachments);
+	assert(36053 == glCheckFramebufferStatus(GL_FRAMEBUFFER));
+	target2.clear({ 0.0,0.0,0.0,1.0 }, true);
+	target2.clearDepth();
+
 	for (size_t i = 0; i < static_cast<size_t>(ModelEnum::MAX); i++) {
 		this->modelRenderers[i].render(
 			ogs::GeneralConfiguration(),
@@ -57,7 +73,7 @@ void Renderer::render(GLFWwindow* window, RenderInfo const& renderInfo) {
 			renderInfo.cameraInfo.VP(),
 			lightVP,
 			renderInfo.cameraInfo.camPos,
-			target,
+			target2,
 			viewport
 		);
 
@@ -76,6 +92,24 @@ void Renderer::render(GLFWwindow* window, RenderInfo const& renderInfo) {
 	}
 
 	target.clearDepth();
+
+	//Global<render::BlitRenderer>->render(
+	//	ogs::BlitConfiguration(),
+	//	render::SingleBlitRenderInfo::full(),
+	//	shadowtarget2,
+	//	glm::ivec4(0, 0, shadowtarget2.size),
+	//	shadow,
+	//	std::nullopt,
+	//	false
+	//);
+
+	this->assembleRenderer.render(
+		ogs::BlitConfiguration(),
+		target,
+		viewport,
+		albedo,
+		shadow
+	);
 
 	this->uiBackgroundRenderer.render(
 		renderInfo.uiRenderInfo,

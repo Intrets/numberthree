@@ -14,6 +14,7 @@ make_module(
 		ui/ConstructSpeedometer
 		renderer/GeneralRenderer
 		renderer/GeneralShadowMapRenderer
+		renderer/AssembleRenderer
 		Renderer
 		Game
 	CXX_STANDARD 20
