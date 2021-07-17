@@ -7,6 +7,8 @@ uniform sampler2D texture_t;
 uniform sampler2D shadowMap_t;
 
 uniform vec3 viewPos;
+uniform float lightFar;
+uniform vec3 lightPos;
 
 in VS_OUT {
     vec3 FragPos;
@@ -14,8 +16,6 @@ in VS_OUT {
     vec2 TexCoords;
     vec4 FragPosLightSpace;
 } fs_in;
-
-uniform vec3 lightPos;
 
 vec2 poissonDisk[20] = vec2[](
 vec2(0.00000, 0.00000),
@@ -208,7 +208,7 @@ void main(){
 
     float diffuse = max(dot(lightDir, normal), 0.0);
 
-	float ambient = 0.5;
+	float ambient = 0.1;
 
 	float spec = 0.0;
 
@@ -216,7 +216,16 @@ void main(){
     vec3 halfwayDir = normalize(lightDir + viewDir);
     spec = pow(max(dot(normal, halfwayDir), 0.0), 32.0);
 
-    float lighting = (ambient + (sshadow) * (diffuse + spec));
+	float spotPower = clamp(1 - 2 * length(projCoords.xy - vec2(0.5)), 0, 1) * 2.2;
+	float distance_to_light = 1 - (fs_in.FragPosLightSpace.z / lightFar);
+	float distance_to_light2 = length(fs_in.FragPos.xyz - lightPos) / lightFar;
+	distance_to_light2 *= distance_to_light2;
+	distance_to_light2 = 1 - distance_to_light2;
+    float lighting = (ambient + (sshadow) * (diffuse + spec * sshadow) * spotPower * distance_to_light2);
+//	lighting = 1 - distance_to_light2;
+//	if (lighting > 1){
+//	lighting = 0;}
+//
 //	float lighting = sshadow;
 //	color = texture(texture_t, fs_in.TexCoords) * vec4(lighting, lighting, lighting, 1.0);
 
@@ -234,7 +243,7 @@ void main(){
 //	color = texture(texture_t, fs_in.TexCoords);
 //	color = vec4(lighting);
 	color.w = 1.0;
-	shadow = lighting;
+	shadow = clamp(lighting, 0, 3);
 //	color.g += r/3;
 //	color.b += g/3;
 }

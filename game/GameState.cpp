@@ -419,40 +419,40 @@ void game::GameState::init() {
 			Transform{
 				.pos = p,
 				.quat = q,
-				.scale = glm::vec3(100.0f)
+				.scale = glm::vec3(200.0f)
 			}
 		);
 
 		this->scene->addActor(*plane);
 	}
 
-	// angled plane
-	{
-		auto obj = this->everything.make();
+	//// angled plane
+	//{
+	//	auto obj = this->everything.make();
 
-		obj.add<Model>(ModelEnum::PLANE);
+	//	obj.add<Model>(ModelEnum::PLANE);
 
-		auto plane = physx::PxCreatePlane(
-			*this->physics,
-			physx::PxPlane(physx::PxVec3(0, 1, 1).getNormalized(), 0),
-			*material
-		);
+	//	auto plane = physx::PxCreatePlane(
+	//		*this->physics,
+	//		physx::PxPlane(physx::PxVec3(0, 1, 1).getNormalized(), 0),
+	//		*material
+	//	);
 
-		PxShape* planeShape;
-		plane->getShapes(&planeShape, 1, 0);
+	//	PxShape* planeShape;
+	//	plane->getShapes(&planeShape, 1, 0);
 
-		auto p = convert<glm::vec3>(plane->getGlobalPose().p);
-		auto q = convert<glm::quat>(plane->getGlobalPose().q);
+	//	auto p = convert<glm::vec3>(plane->getGlobalPose().p);
+	//	auto q = convert<glm::quat>(plane->getGlobalPose().q);
 
-		obj.add<Transform>(
-			Transform{
-				.pos = p,
-				.quat = q,
-				.scale = glm::vec3(100.0f)
-			}
-		);
+	//	obj.add<Transform>(
+	//		Transform{
+	//			.pos = p,
+	//			.quat = q,
+	//			.scale = glm::vec3(100.0f)
+	//		}
+	//	);
 
 
-		this->scene->addActor(*plane);
-	}
+	//	this->scene->addActor(*plane);
+	//}
 }
