@@ -14,6 +14,7 @@ void render::GeneralRenderer::render(
 	bwo::Texture2D const& shadowMap,
 	glm::mat4 VP_,
 	glm::mat4 lightVP_,
+	float lightFar_,
 	glm::vec3 camPos_,
 	bwo::FrameBuffer& target,
 	glm::ivec4 viewport) {
@@ -36,6 +37,7 @@ void render::GeneralRenderer::render(
 	this->lightVP.set(lightVP_);
 	this->lightPos.set(lightPos_);
 	this->viewPos.set(viewPos_);
+	this->lightFar.set(lightFar_);
 
 	static bwo::Texture2D tex = load2DTexture(Global<misc::PathManager>->getTexturesPath() / "dev.dds");
 
