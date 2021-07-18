@@ -27,7 +27,6 @@ make_module(
 		PhysX
 )
 set(SHADER_FILES
-	General
 	GeneralShadowMap
 )
 

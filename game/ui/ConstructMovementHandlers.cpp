@@ -7,8 +7,10 @@
 #include <ui/Invisible.h>
 
 #include <misc/Option.h>
+#include <misc/Log.h>
 
 #include <mem/ReferenceManager.h>
+#include <mem/Global.h>
 
 #include <PxPhysicsAPI.h>
 
@@ -26,16 +28,20 @@ namespace game
 			UniqueReference<Base, Invisible> movement = Global::getManager().makeUniqueRef<Invisible>();
 
 			movement.get()->addGlobalBind({ CONTROL::KEY::EVERY_TICK }, [](UIInfo& uiInfo, UserData& userData) -> CallBackBindResult {
-				static int count = 0;
-				if (count++ % 60 == 0) {
-					render::bwo::Program::refreshAll();
+				if (userData.gameState.tick % 60 == 0) {
+					bool b = render::bwo::Program::refreshAll();
+					assert(b);
 				}
+
 				return ui::BIND::RESULT::CONTINUE;
 				}
 			);
 
 			movement.get()->addGlobalBind({ CONTROL::KEY::F5 }, [](UIInfo& uiInfo, UserData& userData) -> CallBackBindResult {
-				render::bwo::Program::refreshAll();
+				mem::Global<misc::Log>->putLine("Reloading shaders...");
+				bool b = render::bwo::Program::refreshAll();
+				assert(b);
+				mem::Global<misc::Log>->putLine("Reloaded shaders...");
 
 				return ui::BIND::RESULT::CONTINUE;
 				}

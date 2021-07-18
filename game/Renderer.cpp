@@ -18,9 +18,9 @@
 void Renderer::render(GLFWwindow* window, RenderInfo const& renderInfo) {
 	render::bwo::FrameBuffer target{ window };
 
-	static render::bwo::Texture2D d{ render::bwo::Texture2DHelper::makeDepthBuffer(renderInfo.frameSize) };
-	static render::bwo::Texture2D albedo{ render::bwo::Texture2DHelper::makeLinearFiltering(renderInfo.frameSize) };
-	static render::bwo::Texture2D shadow{ render::bwo::Texture2DHelper::makeFloatBuffer(renderInfo.frameSize, true) };
+	render::bwo::Texture2D d{ render::bwo::Texture2DHelper::makeDepthBuffer(renderInfo.frameSize) };
+	render::bwo::Texture2D albedo{ render::bwo::Texture2DHelper::makeLinearFiltering(renderInfo.frameSize) };
+	render::bwo::Texture2D shadow{ render::bwo::Texture2DHelper::makeFloatBuffer(renderInfo.frameSize, true) };
 
 	static render::bwo::FrameBuffer target2;
 
@@ -29,9 +29,6 @@ void Renderer::render(GLFWwindow* window, RenderInfo const& renderInfo) {
 	target.clear({ 0.5f, 0.5f, 0.5f, 1.0f }, true);
 
 	glm::ivec4 viewport{ 0, 0, renderInfo.cameraInfo.x, renderInfo.cameraInfo.y };
-	auto chunkSize = glm::ivec2(viewport.z, viewport.w) / 4;
-
-	lightViewPointTarget.clear({ 0.5f, 0.5f, 0.5f, 1.0f }, true);
 
 	std::vector<glm::mat4> transforms;
 
@@ -41,7 +38,6 @@ void Renderer::render(GLFWwindow* window, RenderInfo const& renderInfo) {
 	glm::vec3 lightPos{ 100.0f, 30.0f, 10.0f };
 	auto lightVP =
 		glm::perspective(glm::radians(30.0f), 1.0f, 0.1f, lightFar) *
-		//glm::ortho(-120.0f, 120.0f, -120.0f, 120.0f, 30.0f, 230.0f) *
 		glm::lookAt(lightPos, { 0.0f, 30.0f, 0.0f }, { 0.0f, 1.0f, 0.0f });
 
 	for (size_t i = 0; i < static_cast<size_t>(ModelEnum::MAX); i++) {
@@ -78,33 +74,9 @@ void Renderer::render(GLFWwindow* window, RenderInfo const& renderInfo) {
 			target2,
 			viewport
 		);
-
-		this->modelRenderers[i].render(
-			ogs::GeneralConfiguration(),
-			renderInfo.modelRenderInfo[i],
-			lightPos,
-			renderInfo.cameraInfo.camPos,
-			depthBuffer,
-			lightVP,
-			lightVP,
-			lightFar,
-			renderInfo.cameraInfo.camPos,
-			lightViewPointTarget,
-			viewport / 4
-		);
 	}
 
 	target.clearDepth();
-
-	//Global<render::BlitRenderer>->render(
-	//	ogs::BlitConfiguration(),
-	//	render::SingleBlitRenderInfo::full(),
-	//	shadowtarget2,
-	//	glm::ivec4(0, 0, shadowtarget2.size),
-	//	shadow,
-	//	std::nullopt,
-	//	false
-	//);
 
 	this->assembleRenderer.render(
 		ogs::BlitConfiguration(),
@@ -137,26 +109,6 @@ void Renderer::render(GLFWwindow* window, RenderInfo const& renderInfo) {
 		Global<render::DebugRenderInfo>->clear();
 	}
 	Global<misc::Timer>->endTiming("Render");
-
-	Global<render::BlitRenderer>->render(
-		ogs::BlitConfiguration(),
-		render::SingleBlitRenderInfo::full(),
-		target,
-		viewport / 4,
-		depthBuffer,
-		std::nullopt,
-		true
-	);
-
-	Global<render::BlitRenderer>->render(
-		ogs::BlitConfiguration(),
-		render::SingleBlitRenderInfo::full(),
-		target,
-		glm::vec4(0, chunkSize.y, chunkSize),
-		lightViewPointBuffer,
-		std::nullopt,
-		true
-	);
 
 	Global<misc::Timer>->newTiming("Swap Buffers");
 	glfwSwapBuffers(window);

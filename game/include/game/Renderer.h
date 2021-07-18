@@ -52,10 +52,6 @@ public:
 	render::GeneralRenderer suzanneRenderer;
 	render::GeneralRenderer ground;
 
-	render::bwo::Texture2D lightViewPointBuffer{ render::bwo::Texture2DHelper::makeNoFiltering({512,512}) };
-	render::bwo::Texture2D lightViewPointDepthBuffer{ render::bwo::Texture2DHelper::makeDepthBuffer({512,512}) };
-	render::bwo::FrameBuffer lightViewPointTarget;
-
 	render::bwo::Texture2D depthBuffer{ render::bwo::Texture2DHelper::makeDepthBuffer({1024*4, 1024*4}) };
 	render::bwo::FrameBuffer depthTarget;
 
@@ -78,10 +74,6 @@ public:
 					}
 				}
 			}
-			this->lightViewPointTarget.bindTextureColor(0, lightViewPointBuffer, 0);
-			this->lightViewPointTarget.bindDepthLayer(lightViewPointDepthBuffer);
-			this->lightViewPointTarget.clear({ 0.5f, 0.5f, 0.5f, 1.0f }, true);
-
 			this->depthTarget.bindDepthLayer(depthBuffer);
 			this->depthTarget.onlyDepth();
 			this->depthTarget.clearDepth();
